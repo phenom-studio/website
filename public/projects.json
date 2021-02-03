@@ -1,10 +1,34 @@
 {
     "Project 1": {
-            "title": "Project 1 title",
-            "tag": "Best project ever"
-        },
+        "title": "Project 1 title",
+        "tag": "Best project ever"
+    },
     "Project 2": {
-            "title": "Project 2 title",
-            "tag": "Next best project ever"
-        }
+        "title": "Project 2 title",
+        "tag": "Next best project ever"
+    },
+    "Project 3": {
+        "title": "Project 3 title",
+        "tag": "Pretty good project"
+    },
+    "Project 4": {
+        "title": "Project 4 title",
+        "tag": "Pretty good project"
+    },
+    "Project 5": {
+        "title": "Project 5 title",
+        "tag": "Best project ever"
+    },
+    "Project 6": {
+        "title": "Project 6 title",
+        "tag": "Next best project ever"
+    },
+    "Project 7": {
+        "title": "Project 7 title",
+        "tag": "Pretty good project"
+    },
+    "Project 8": {
+        "title": "Project 8 title",
+        "tag": "Pretty good project"
+    }
 }

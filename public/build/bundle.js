@@ -498,7 +498,7 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			if (default_slot) default_slot.c();
-    			attr_dev(div, "class", "grid svelte-1gu0r7k");
+    			attr_dev(div, "class", "grid svelte-g8a30b");
     			add_location(div, file, 0, 0, 0);
     		},
     		l: function claim(nodes) {
