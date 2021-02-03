@@ -1,3 +1,7 @@
+<div class="grid">
+    <slot />
+  </div>
+
 <style lang="scss">
     .grid {
       display: grid;
@@ -5,8 +9,3 @@
       column-gap: 1rem;
     }
 </style>
-  
-  <div class="grid">
-      Grid
-    <!-- <slot /> -->
-  </div>

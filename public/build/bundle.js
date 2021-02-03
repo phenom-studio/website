@@ -4,6 +4,12 @@ var app = (function () {
     'use strict';
 
     function noop() { }
+    function assign(tar, src) {
+        // @ts-ignore
+        for (const k in src)
+            tar[k] = src[k];
+        return tar;
+    }
     function add_location(element, file, line, column, char) {
         element.__svelte_meta = {
             loc: { file, line, column, char }
@@ -27,6 +33,42 @@ var app = (function () {
     function is_empty(obj) {
         return Object.keys(obj).length === 0;
     }
+    function create_slot(definition, ctx, $$scope, fn) {
+        if (definition) {
+            const slot_ctx = get_slot_context(definition, ctx, $$scope, fn);
+            return definition[0](slot_ctx);
+        }
+    }
+    function get_slot_context(definition, ctx, $$scope, fn) {
+        return definition[1] && fn
+            ? assign($$scope.ctx.slice(), definition[1](fn(ctx)))
+            : $$scope.ctx;
+    }
+    function get_slot_changes(definition, $$scope, dirty, fn) {
+        if (definition[2] && fn) {
+            const lets = definition[2](fn(dirty));
+            if ($$scope.dirty === undefined) {
+                return lets;
+            }
+            if (typeof lets === 'object') {
+                const merged = [];
+                const len = Math.max($$scope.dirty.length, lets.length);
+                for (let i = 0; i < len; i += 1) {
+                    merged[i] = $$scope.dirty[i] | lets[i];
+                }
+                return merged;
+            }
+            return $$scope.dirty | lets;
+        }
+        return $$scope.dirty;
+    }
+    function update_slot(slot, slot_definition, ctx, $$scope, dirty, get_slot_changes_fn, get_slot_context_fn) {
+        const slot_changes = get_slot_changes(slot_definition, $$scope, dirty, get_slot_changes_fn);
+        if (slot_changes) {
+            const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
+            slot.p(slot_context, slot_changes);
+        }
+    }
 
     function append(target, node) {
         target.appendChild(node);
@@ -37,6 +79,12 @@ var app = (function () {
     function detach(node) {
         node.parentNode.removeChild(node);
     }
+    function destroy_each(iterations, detaching) {
+        for (let i = 0; i < iterations.length; i += 1) {
+            if (iterations[i])
+                iterations[i].d(detaching);
+        }
+    }
     function element(name) {
         return document.createElement(name);
     }
@@ -45,6 +93,9 @@ var app = (function () {
     }
     function space() {
         return text(' ');
+    }
+    function empty() {
+        return text('');
     }
     function attr(node, attribute, value) {
         if (value == null)
@@ -131,6 +182,19 @@ var app = (function () {
     }
     const outroing = new Set();
     let outros;
+    function group_outros() {
+        outros = {
+            r: 0,
+            c: [],
+            p: outros // parent group
+        };
+    }
+    function check_outros() {
+        if (!outros.r) {
+            run_all(outros.c);
+        }
+        outros = outros.p;
+    }
     function transition_in(block, local) {
         if (block && block.i) {
             outroing.delete(block);
@@ -299,6 +363,15 @@ var app = (function () {
         else
             dispatch_dev('SvelteDOMSetAttribute', { node, attribute, value });
     }
+    function validate_each_argument(arg) {
+        if (typeof arg !== 'string' && !(arg && typeof arg === 'object' && 'length' in arg)) {
+            let msg = '{#each} only iterates over array-like objects.';
+            if (typeof Symbol === 'function' && arg && Symbol.iterator in arg) {
+                msg += ' You can use a spread to convert this iterable into an array.';
+            }
+            throw new Error(msg);
+        }
+    }
     function validate_slots(name, slot, keys) {
         for (const slot_key of Object.keys(slot)) {
             if (!~keys.indexOf(slot_key)) {
@@ -332,25 +405,48 @@ var app = (function () {
 
     function create_fragment(ctx) {
     	let div;
+    	let current;
+    	const default_slot_template = /*#slots*/ ctx[1].default;
+    	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[0], null);
 
     	const block = {
     		c: function create() {
     			div = element("div");
-    			div.textContent = "Grid";
+    			if (default_slot) default_slot.c();
     			attr_dev(div, "class", "grid svelte-1gu0r7k");
-    			add_location(div, file, 6, 2, 118);
+    			add_location(div, file, 0, 0, 0);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
+
+    			if (default_slot) {
+    				default_slot.m(div, null);
+    			}
+
+    			current = true;
     		},
-    		p: noop,
-    		i: noop,
-    		o: noop,
+    		p: function update(ctx, [dirty]) {
+    			if (default_slot) {
+    				if (default_slot.p && dirty & /*$$scope*/ 1) {
+    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[0], dirty, null, null);
+    				}
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(default_slot, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(default_slot, local);
+    			current = false;
+    		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
+    			if (default_slot) default_slot.d(detaching);
     		}
     	};
 
@@ -365,16 +461,20 @@ var app = (function () {
     	return block;
     }
 
-    function instance($$self, $$props) {
+    function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
-    	validate_slots("Grid", slots, []);
+    	validate_slots("Grid", slots, ['default']);
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Grid> was created with unknown prop '${key}'`);
     	});
 
-    	return [];
+    	$$self.$$set = $$props => {
+    		if ("$$scope" in $$props) $$invalidate(0, $$scope = $$props.$$scope);
+    	};
+
+    	return [$$scope, slots];
     }
 
     class Grid extends SvelteComponentDev {
@@ -391,10 +491,271 @@ var app = (function () {
     	}
     }
 
-    /* src/App.svelte generated by Svelte v3.32.1 */
-    const file$1 = "src/App.svelte";
+    /* src/Card.svelte generated by Svelte v3.32.1 */
+
+    const file$1 = "src/Card.svelte";
 
     function create_fragment$1(ctx) {
+    	let div1;
+    	let div0;
+    	let h3;
+    	let t1;
+    	let h4;
+
+    	const block = {
+    		c: function create() {
+    			div1 = element("div");
+    			div0 = element("div");
+    			h3 = element("h3");
+    			h3.textContent = `${/*title*/ ctx[0]}`;
+    			t1 = space();
+    			h4 = element("h4");
+    			h4.textContent = `${/*tag*/ ctx[1]}`;
+    			add_location(h3, file$1, 8, 8, 135);
+    			add_location(h4, file$1, 9, 8, 160);
+    			attr_dev(div0, "class", "background svelte-1kga5ry");
+    			add_location(div0, file$1, 7, 4, 102);
+    			attr_dev(div1, "class", "card");
+    			add_location(div1, file$1, 6, 0, 79);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div1, anchor);
+    			append_dev(div1, div0);
+    			append_dev(div0, h3);
+    			append_dev(div0, t1);
+    			append_dev(div0, h4);
+    		},
+    		p: noop,
+    		i: noop,
+    		o: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div1);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$1.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$1($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("Card", slots, []);
+    	let { project } = $$props;
+    	let { title, tag } = project;
+    	const writable_props = ["project"];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Card> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$$set = $$props => {
+    		if ("project" in $$props) $$invalidate(2, project = $$props.project);
+    	};
+
+    	$$self.$capture_state = () => ({ project, title, tag });
+
+    	$$self.$inject_state = $$props => {
+    		if ("project" in $$props) $$invalidate(2, project = $$props.project);
+    		if ("title" in $$props) $$invalidate(0, title = $$props.title);
+    		if ("tag" in $$props) $$invalidate(1, tag = $$props.tag);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [title, tag, project];
+    }
+
+    class Card extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, { project: 2 });
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "Card",
+    			options,
+    			id: create_fragment$1.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*project*/ ctx[2] === undefined && !("project" in props)) {
+    			console.warn("<Card> was created without expected prop 'project'");
+    		}
+    	}
+
+    	get project() {
+    		throw new Error("<Card>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set project(value) {
+    		throw new Error("<Card>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
+    /* src/App.svelte generated by Svelte v3.32.1 */
+    const file$2 = "src/App.svelte";
+
+    function get_each_context(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[1] = list[i];
+    	return child_ctx;
+    }
+
+    // (34:3) { #each projects as project }
+    function create_each_block(ctx) {
+    	let card;
+    	let current;
+
+    	card = new Card({
+    			props: { project: /*project*/ ctx[1] },
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			create_component(card.$$.fragment);
+    		},
+    		m: function mount(target, anchor) {
+    			mount_component(card, target, anchor);
+    			current = true;
+    		},
+    		p: noop,
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(card.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(card.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_component(card, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block.name,
+    		type: "each",
+    		source: "(34:3) { #each projects as project }",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (33:2) <Grid>
+    function create_default_slot(ctx) {
+    	let each_1_anchor;
+    	let current;
+    	let each_value = /*projects*/ ctx[0];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	const block = {
+    		c: function create() {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			each_1_anchor = empty();
+    		},
+    		m: function mount(target, anchor) {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(target, anchor);
+    			}
+
+    			insert_dev(target, each_1_anchor, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*projects*/ 1) {
+    				each_value = /*projects*/ ctx[0];
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_each(each_blocks, detaching);
+    			if (detaching) detach_dev(each_1_anchor);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot.name,
+    		type: "slot",
+    		source: "(33:2) <Grid>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$2(ctx) {
     	let main;
     	let header;
     	let h1;
@@ -412,7 +773,14 @@ var app = (function () {
     	let t8;
     	let footer;
     	let current;
-    	grid = new Grid({ $$inline: true });
+
+    	grid = new Grid({
+    			props: {
+    				$$slots: { default: [create_default_slot] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
 
     	const block = {
     		c: function create() {
@@ -430,7 +798,7 @@ var app = (function () {
     			li1.textContent = "Contact";
     			t5 = space();
     			div1 = element("div");
-    			div1.textContent = "Carosel";
+    			div1.textContent = "Carousel";
     			t7 = space();
     			div2 = element("div");
     			create_component(grid.$$.fragment);
@@ -438,17 +806,17 @@ var app = (function () {
     			footer = element("footer");
     			footer.textContent = "Colophon & Copyright";
     			attr_dev(h1, "class", "svelte-b3v6n9");
-    			add_location(h1, file$1, 6, 2, 74);
-    			add_location(li0, file$1, 9, 4, 108);
-    			add_location(li1, file$1, 10, 4, 126);
-    			add_location(ul, file$1, 8, 3, 99);
-    			add_location(div0, file$1, 7, 2, 90);
-    			add_location(header, file$1, 5, 1, 63);
-    			add_location(div1, file$1, 14, 1, 173);
-    			add_location(div2, file$1, 17, 1, 198);
-    			add_location(footer, file$1, 21, 1, 232);
+    			add_location(h1, file$2, 20, 2, 260);
+    			add_location(li0, file$2, 23, 4, 294);
+    			add_location(li1, file$2, 24, 4, 312);
+    			add_location(ul, file$2, 22, 3, 285);
+    			add_location(div0, file$2, 21, 2, 276);
+    			add_location(header, file$2, 19, 1, 249);
+    			add_location(div1, file$2, 28, 1, 359);
+    			add_location(div2, file$2, 31, 1, 385);
+    			add_location(footer, file$2, 38, 1, 488);
     			attr_dev(main, "class", "svelte-b3v6n9");
-    			add_location(main, file$1, 4, 0, 55);
+    			add_location(main, file$2, 18, 0, 241);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -475,7 +843,7 @@ var app = (function () {
     		p: function update(ctx, [dirty]) {
     			const grid_changes = {};
 
-    			if (dirty & /*$$scope*/ 1) {
+    			if (dirty & /*$$scope*/ 16) {
     				grid_changes.$$scope = { dirty, ctx };
     			}
 
@@ -498,7 +866,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$1.name,
+    		id: create_fragment$2.name,
     		type: "component",
     		source: "",
     		ctx
@@ -507,29 +875,41 @@ var app = (function () {
     	return block;
     }
 
-    function instance$1($$self, $$props, $$invalidate) {
+    function instance$2($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("App", slots, []);
+
+    	const projects = [
+    		{
+    			title: "Project 1",
+    			tag: "Best project ever"
+    		},
+    		{
+    			title: "Project 2",
+    			tag: "Next best project ever"
+    		}
+    	];
+
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
-    	$$self.$capture_state = () => ({ Grid });
-    	return [];
+    	$$self.$capture_state = () => ({ Grid, Card, projects });
+    	return [projects];
     }
 
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {});
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "App",
     			options,
-    			id: create_fragment$1.name
+    			id: create_fragment$2.name
     		});
     	}
     }
