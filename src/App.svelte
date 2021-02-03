@@ -1,5 +1,5 @@
 <script>
-	export let name;
+	import Grid from './Grid.svelte';
 </script>
 
 <main>
@@ -16,7 +16,8 @@
 		Carosel
 	</div>
 	<div>
-		Grid
+		<Grid>
+		</Grid>
 	</div>
 	<footer>
 		Colophon & Copyright
