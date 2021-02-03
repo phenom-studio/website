@@ -1,4 +1,12 @@
-/node_modules/
-/public/build/
-
+# mac file system
 .DS_Store
+
+# dependencies
+.pnp.js
+
+# production
+/build
+
+# development
+.yarn
+.yarnrc.yml
