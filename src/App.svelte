@@ -3,21 +3,37 @@
 </script>
 
 <main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+	<header>
+		<h1>Logo</h1>
+		<div>
+			<ul>
+				<li>Work</li>
+				<li>Contact</li>
+			</ul>
+		</div>
+	</header>
+	<div>
+		Carosel
+	</div>
+	<div>
+		Grid
+	</div>
+	<footer>
+		Colophon & Copyright
+	</footer>
 </main>
 
-<style>
+<style lang="scss">
 	main {
-		text-align: center;
+		text-align: left;
+		color: black;
 		padding: 1em;
-		max-width: 240px;
+		max-width: 1050px;
 		margin: 0 auto;
+		border: 1px solid black;
 	}
 
 	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
 		font-size: 4em;
 		font-weight: 100;
 	}
