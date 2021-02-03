@@ -581,6 +581,7 @@ var app = (function () {
     const file$1 = "src/Card.svelte";
 
     function create_fragment$1(ctx) {
+    	let div2;
     	let div1;
     	let div0;
     	let h3;
@@ -589,6 +590,7 @@ var app = (function () {
 
     	const block = {
     		c: function create() {
+    			div2 = element("div");
     			div1 = element("div");
     			div0 = element("div");
     			h3 = element("h3");
@@ -596,18 +598,21 @@ var app = (function () {
     			t1 = space();
     			h4 = element("h4");
     			h4.textContent = `${/*tag*/ ctx[1]}`;
-    			add_location(h3, file$1, 8, 8, 135);
-    			add_location(h4, file$1, 9, 8, 160);
-    			attr_dev(div0, "class", "background svelte-1kga5ry");
-    			add_location(div0, file$1, 7, 4, 102);
-    			attr_dev(div1, "class", "card");
-    			add_location(div1, file$1, 6, 0, 79);
+    			add_location(h3, file$1, 9, 12, 169);
+    			add_location(h4, file$1, 10, 12, 198);
+    			attr_dev(div0, "class", "content svelte-tgkyqa");
+    			add_location(div0, file$1, 8, 8, 135);
+    			attr_dev(div1, "class", "background svelte-tgkyqa");
+    			add_location(div1, file$1, 7, 4, 102);
+    			attr_dev(div2, "class", "card");
+    			add_location(div2, file$1, 6, 0, 79);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div1, anchor);
+    			insert_dev(target, div2, anchor);
+    			append_dev(div2, div1);
     			append_dev(div1, div0);
     			append_dev(div0, h3);
     			append_dev(div0, t1);
@@ -617,7 +622,7 @@ var app = (function () {
     		i: noop,
     		o: noop,
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div1);
+    			if (detaching) detach_dev(div2);
     		}
     	};
 

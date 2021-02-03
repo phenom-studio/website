@@ -6,14 +6,22 @@
 
 <div class="card">
     <div class="background">
-        <h3>{title}</h3>
-        <h4>{tag}</h4>
+        <div class="content">
+            <h3>{title}</h3>
+            <h4>{tag}</h4>
+        </div>
     </div>
 </div>
 
 <style lang="scss">
     .background {
+        position: relative;
         width: 100%;
+        padding-bottom: 100%;
         background-color: rebeccapurple;
+    }
+
+    .content {
+        position: absolute;
     }
 </style>
