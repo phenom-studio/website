@@ -1,6 +1,6 @@
 <div class="grid">
     <slot />
-  </div>
+</div>
 
 <style lang="scss">
     .grid {

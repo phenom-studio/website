@@ -1,0 +1,10 @@
+{
+    "Project 1": {
+            "title": "Project 1 title",
+            "tag": "Best project ever"
+        },
+    "Project 2": {
+            "title": "Project 2 title",
+            "tag": "Next best project ever"
+        }
+}

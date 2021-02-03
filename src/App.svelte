@@ -2,18 +2,25 @@
 	import Grid from './Grid.svelte';
 	import Card from './Card.svelte';
 
-	const projects = [
-		{
-			title: 'Project 1',
-			tag: 'Best project ever'
-		},
-		{
-			title: 'Project 2',
-			tag: 'Next best project ever'
+	const projectDataUrl = "./projects.json";
+
+	async function fetchJSONData(url) {
+		let data = [];
+		const res = await fetch(url);
+		const jsonObj = await res.json();
+		console.log(jsonObj)
+		for(var item in jsonObj) {
+			data.push(jsonObj[item]);
 		}
-	];
 
+		console.log(data);
 
+		if (res.ok) {
+			return data;
+		} else {
+			throw new Error(data);
+		}
+	}
 </script>
 
 <main>
@@ -31,9 +38,15 @@
 	</div>
 	<div>
 		<Grid>
-			{ #each projects as project }
-				<Card {project} />
-		  	{/each}
+			{#await fetchJSONData(projectDataUrl)}
+				<p>loading</p>
+			{:then projects}
+				{#each projects as project}
+					<Card {project} />
+				{/each}
+			{:catch error}
+				{(console.log(error.message))}
+			{/await}
 		</Grid>
 	</div>
 	<footer>
