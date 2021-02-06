@@ -1033,17 +1033,18 @@ var app = (function () {
     			t8 = space();
     			footer = element("footer");
     			footer.textContent = "Colophon & Copyright";
-    			attr_dev(h1, "class", "svelte-b3v6n9");
+    			attr_dev(h1, "class", "svelte-1rh6lr2");
     			add_location(h1, file$2, 27, 2, 460);
     			add_location(li0, file$2, 30, 4, 494);
     			add_location(li1, file$2, 31, 4, 512);
     			add_location(ul, file$2, 29, 3, 485);
     			add_location(div0, file$2, 28, 2, 476);
+    			attr_dev(header, "class", "svelte-1rh6lr2");
     			add_location(header, file$2, 26, 1, 449);
     			add_location(div1, file$2, 35, 1, 559);
     			add_location(div2, file$2, 38, 1, 585);
     			add_location(footer, file$2, 51, 1, 833);
-    			attr_dev(main, "class", "svelte-b3v6n9");
+    			attr_dev(main, "class", "svelte-1rh6lr2");
     			add_location(main, file$2, 25, 0, 441);
     		},
     		l: function claim(nodes) {

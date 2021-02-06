@@ -10,3 +10,6 @@
 # development
 .yarn
 .yarnrc.yml
+
+# notes
+Notes.txt

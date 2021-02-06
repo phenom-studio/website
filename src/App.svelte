@@ -64,9 +64,13 @@
 		border: 1px solid black;
 	}
 
+	header {
+		display: flex;
+		justify-content: space-between;
+	}
+
 	h1 {
-		font-size: 4em;
-		font-weight: 100;
+		font-size: 2em;
 	}
 
 	@media (min-width: 640px) {
