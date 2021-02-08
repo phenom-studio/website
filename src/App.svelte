@@ -1,4 +1,5 @@
 <script>
+	import Carousel from './components/Carousel.svelte';
 	import Grid from './Grid.svelte';
 	import Card from './Card.svelte';
 
@@ -21,6 +22,16 @@
 			throw new Error(data);
 		}
 	}
+
+	const carouselImages = [
+		{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
+		{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
+		{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
+		{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
+		{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
+		{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
+	]
+
 </script>
 
 <main>
@@ -33,8 +44,19 @@
 			</ul>
 		</div>
 	</header>
-	<div>
-		Carousel
+	<div id="carousel-container">
+		<Carousel 
+			{carouselImages}
+		/>
+		<Carousel 
+			{carouselImages}
+		/>
+		<Carousel 
+			{carouselImages}
+		/>
+		<Carousel 
+			{carouselImages}
+		/>
 	</div>
 	<div>
 		<Grid>
@@ -71,6 +93,15 @@
 
 	h1 {
 		font-size: 2em;
+	}
+
+	#carousel-container {
+		width: 100%;
+		height: 300px;
+		display: flex;
+		flex-wrap: nowrap;
+		flex-direction: row;
+		overflow-x: hidden;
 	}
 
 	@media (min-width: 640px) {
