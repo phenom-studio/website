@@ -1,5 +1,5 @@
 <script>
-	import Carousel from './components/Carousel.svelte';
+	import MultiCarousel from './components/MultiCarousel.svelte';
 	import Grid from './Grid.svelte';
 	import Card from './Card.svelte';
 
@@ -23,13 +23,44 @@
 		}
 	}
 
+	let carouselIndex = 0;
+
 	const carouselImages = [
-		{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
-		{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
-		{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
-		{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
-		{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
-		{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
+		[
+			{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
+			{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
+			{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
+			{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
+			{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
+			{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
+		],
+
+		[
+			{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
+			{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
+			{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
+			{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
+			{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
+			{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
+		],
+
+		[
+			{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
+			{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
+			{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
+			{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
+			{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
+			{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
+		],
+
+		[
+			{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
+			{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
+			{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
+			{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
+			{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
+			{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
+		]
 	]
 
 </script>
@@ -45,16 +76,7 @@
 		</div>
 	</header>
 	<div id="carousel-container">
-		<Carousel 
-			{carouselImages}
-		/>
-		<Carousel 
-			{carouselImages}
-		/>
-		<Carousel 
-			{carouselImages}
-		/>
-		<Carousel 
+		<MultiCarousel 
 			{carouselImages}
 		/>
 	</div>

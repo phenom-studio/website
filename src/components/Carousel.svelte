@@ -42,14 +42,13 @@
         animate:flip
       />
     {/each} -->
-    {#each [carouselImages[index].path] as src (index)}
+    {#each [carouselImages[index][index].path] as src (index)}
         <img
           transition:fade
           {src}
           style={`width: ${imageWidth}px; height: ${imageHeight}px`}
         />
     {/each}
-    <button on:click={next}>Next!</button>
   </div>
 
 <style>

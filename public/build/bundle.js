@@ -136,10 +136,6 @@ var app = (function () {
     function empty() {
         return text('');
     }
-    function listen(node, event, handler, options) {
-        node.addEventListener(event, handler, options);
-        return () => node.removeEventListener(event, handler, options);
-    }
     function attr(node, attribute, value) {
         if (value == null)
             node.removeAttribute(attribute);
@@ -752,19 +748,6 @@ var app = (function () {
         dispatch_dev('SvelteDOMRemove', { node });
         detach(node);
     }
-    function listen_dev(node, event, handler, options, has_prevent_default, has_stop_propagation) {
-        const modifiers = options === true ? ['capture'] : options ? Array.from(Object.keys(options)) : [];
-        if (has_prevent_default)
-            modifiers.push('preventDefault');
-        if (has_stop_propagation)
-            modifiers.push('stopPropagation');
-        dispatch_dev('SvelteDOMAddEventListener', { node, event, handler, modifiers });
-        const dispose = listen(node, event, handler, options);
-        return () => {
-            dispatch_dev('SvelteDOMRemoveEventListener', { node, event, handler, modifiers });
-            dispose();
-        };
-    }
     function attr_dev(node, attribute, value) {
         attr(node, attribute, value);
         if (value == null)
@@ -849,7 +832,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (45:4) {#each [carouselImages[index].path] as src (index)}
+    // (45:4) {#each [carouselImages[index][index].path] as src (index)}
     function create_each_block(key_1, ctx) {
     	let img;
     	let img_src_value;
@@ -865,7 +848,7 @@ var app = (function () {
     			if (img.src !== (img_src_value = /*src*/ ctx[8])) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "style", img_style_value = `width: ${/*imageWidth*/ ctx[1]}px; height: ${/*imageHeight*/ ctx[2]}px`);
     			attr_dev(img, "class", "svelte-13hs1sq");
-    			add_location(img, file, 45, 8, 1060);
+    			add_location(img, file, 45, 8, 1067);
     			this.first = img;
     		},
     		m: function mount(target, anchor) {
@@ -908,7 +891,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(45:4) {#each [carouselImages[index].path] as src (index)}",
+    		source: "(45:4) {#each [carouselImages[index][index].path] as src (index)}",
     		ctx
     	});
 
@@ -919,12 +902,8 @@ var app = (function () {
     	let div;
     	let each_blocks = [];
     	let each_1_lookup = new Map();
-    	let t0;
-    	let button;
     	let current;
-    	let mounted;
-    	let dispose;
-    	let each_value = [/*carouselImages*/ ctx[0][/*index*/ ctx[3]].path];
+    	let each_value = [/*carouselImages*/ ctx[0][/*index*/ ctx[3]][/*index*/ ctx[3]].path];
     	validate_each_argument(each_value);
     	const get_key = ctx => /*index*/ ctx[3];
     	validate_each_keys(ctx, each_value, get_each_context, get_key);
@@ -943,10 +922,6 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			t0 = space();
-    			button = element("button");
-    			button.textContent = "Next!";
-    			add_location(button, file, 51, 4, 1203);
     			attr_dev(div, "id", "carousel-images");
     			attr_dev(div, "class", "svelte-13hs1sq");
     			add_location(div, file, 35, 2, 752);
@@ -961,22 +936,15 @@ var app = (function () {
     				each_blocks[i].m(div, null);
     			}
 
-    			append_dev(div, t0);
-    			append_dev(div, button);
     			current = true;
-
-    			if (!mounted) {
-    				dispose = listen_dev(button, "click", /*next*/ ctx[4], false, false, false);
-    				mounted = true;
-    			}
     		},
     		p: function update(ctx, [dirty]) {
     			if (dirty & /*carouselImages, index, imageWidth, imageHeight*/ 15) {
-    				each_value = [/*carouselImages*/ ctx[0][/*index*/ ctx[3]].path];
+    				each_value = [/*carouselImages*/ ctx[0][/*index*/ ctx[3]][/*index*/ ctx[3]].path];
     				validate_each_argument(each_value);
     				group_outros();
     				validate_each_keys(ctx, each_value, get_each_context, get_key);
-    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div, outro_and_destroy_block, create_each_block, t0, get_each_context);
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, div, outro_and_destroy_block, create_each_block, null, get_each_context);
     				check_outros();
     			}
     		},
@@ -1002,9 +970,6 @@ var app = (function () {
     			for (let i = 0; i < 1; i += 1) {
     				each_blocks[i].d();
     			}
-
-    			mounted = false;
-    			dispose();
     		}
     	};
 
@@ -1054,8 +1019,8 @@ var app = (function () {
     		if ("carouselImages" in $$props) $$invalidate(0, carouselImages = $$props.carouselImages);
     		if ("imageWidth" in $$props) $$invalidate(1, imageWidth = $$props.imageWidth);
     		if ("imageHeight" in $$props) $$invalidate(2, imageHeight = $$props.imageHeight);
-    		if ("transitionDuration" in $$props) $$invalidate(5, transitionDuration = $$props.transitionDuration);
-    		if ("transitionDelay" in $$props) $$invalidate(6, transitionDelay = $$props.transitionDelay);
+    		if ("transitionDuration" in $$props) $$invalidate(4, transitionDuration = $$props.transitionDuration);
+    		if ("transitionDelay" in $$props) $$invalidate(5, transitionDelay = $$props.transitionDelay);
     	};
 
     	$$self.$capture_state = () => ({
@@ -1075,8 +1040,8 @@ var app = (function () {
     		if ("carouselImages" in $$props) $$invalidate(0, carouselImages = $$props.carouselImages);
     		if ("imageWidth" in $$props) $$invalidate(1, imageWidth = $$props.imageWidth);
     		if ("imageHeight" in $$props) $$invalidate(2, imageHeight = $$props.imageHeight);
-    		if ("transitionDuration" in $$props) $$invalidate(5, transitionDuration = $$props.transitionDuration);
-    		if ("transitionDelay" in $$props) $$invalidate(6, transitionDelay = $$props.transitionDelay);
+    		if ("transitionDuration" in $$props) $$invalidate(4, transitionDuration = $$props.transitionDuration);
+    		if ("transitionDelay" in $$props) $$invalidate(5, transitionDelay = $$props.transitionDelay);
     		if ("index" in $$props) $$invalidate(3, index = $$props.index);
     		if ("run" in $$props) run = $$props.run;
     	};
@@ -1086,7 +1051,7 @@ var app = (function () {
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*transitionDelay*/ 64) {
+    		if ($$self.$$.dirty & /*transitionDelay*/ 32) {
     			// const flipImageArray = () => {
     			//   images = [...images.slice(1, images.length), images[0]]
     			// }
@@ -1107,7 +1072,6 @@ var app = (function () {
     		imageWidth,
     		imageHeight,
     		index,
-    		next,
     		transitionDuration,
     		transitionDelay
     	];
@@ -1121,8 +1085,8 @@ var app = (function () {
     			carouselImages: 0,
     			imageWidth: 1,
     			imageHeight: 2,
-    			transitionDuration: 5,
-    			transitionDelay: 6
+    			transitionDuration: 4,
+    			transitionDelay: 5
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -1181,11 +1145,181 @@ var app = (function () {
     	}
     }
 
+    /* src/components/MultiCarousel.svelte generated by Svelte v3.32.1 */
+
+    function create_fragment$1(ctx) {
+    	let carousel0;
+    	let t0;
+    	let carousel1;
+    	let t1;
+    	let carousel2;
+    	let t2;
+    	let carousel3;
+    	let current;
+
+    	carousel0 = new Carousel({
+    			props: {
+    				carouselImages: /*carouselImages*/ ctx[0]
+    			},
+    			$$inline: true
+    		});
+
+    	carousel1 = new Carousel({
+    			props: {
+    				carouselImages: /*carouselImages*/ ctx[0]
+    			},
+    			$$inline: true
+    		});
+
+    	carousel2 = new Carousel({
+    			props: {
+    				carouselImages: /*carouselImages*/ ctx[0]
+    			},
+    			$$inline: true
+    		});
+
+    	carousel3 = new Carousel({
+    			props: {
+    				carouselImages: /*carouselImages*/ ctx[0]
+    			},
+    			$$inline: true
+    		});
+
+    	const block = {
+    		c: function create() {
+    			create_component(carousel0.$$.fragment);
+    			t0 = space();
+    			create_component(carousel1.$$.fragment);
+    			t1 = space();
+    			create_component(carousel2.$$.fragment);
+    			t2 = space();
+    			create_component(carousel3.$$.fragment);
+    		},
+    		l: function claim(nodes) {
+    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    		},
+    		m: function mount(target, anchor) {
+    			mount_component(carousel0, target, anchor);
+    			insert_dev(target, t0, anchor);
+    			mount_component(carousel1, target, anchor);
+    			insert_dev(target, t1, anchor);
+    			mount_component(carousel2, target, anchor);
+    			insert_dev(target, t2, anchor);
+    			mount_component(carousel3, target, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, [dirty]) {
+    			const carousel0_changes = {};
+    			if (dirty & /*carouselImages*/ 1) carousel0_changes.carouselImages = /*carouselImages*/ ctx[0];
+    			carousel0.$set(carousel0_changes);
+    			const carousel1_changes = {};
+    			if (dirty & /*carouselImages*/ 1) carousel1_changes.carouselImages = /*carouselImages*/ ctx[0];
+    			carousel1.$set(carousel1_changes);
+    			const carousel2_changes = {};
+    			if (dirty & /*carouselImages*/ 1) carousel2_changes.carouselImages = /*carouselImages*/ ctx[0];
+    			carousel2.$set(carousel2_changes);
+    			const carousel3_changes = {};
+    			if (dirty & /*carouselImages*/ 1) carousel3_changes.carouselImages = /*carouselImages*/ ctx[0];
+    			carousel3.$set(carousel3_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(carousel0.$$.fragment, local);
+    			transition_in(carousel1.$$.fragment, local);
+    			transition_in(carousel2.$$.fragment, local);
+    			transition_in(carousel3.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(carousel0.$$.fragment, local);
+    			transition_out(carousel1.$$.fragment, local);
+    			transition_out(carousel2.$$.fragment, local);
+    			transition_out(carousel3.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_component(carousel0, detaching);
+    			if (detaching) detach_dev(t0);
+    			destroy_component(carousel1, detaching);
+    			if (detaching) detach_dev(t1);
+    			destroy_component(carousel2, detaching);
+    			if (detaching) detach_dev(t2);
+    			destroy_component(carousel3, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_fragment$1.name,
+    		type: "component",
+    		source: "",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function instance$1($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("MultiCarousel", slots, []);
+    	let { carouselImages } = $$props;
+    	const writable_props = ["carouselImages"];
+
+    	Object.keys($$props).forEach(key => {
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<MultiCarousel> was created with unknown prop '${key}'`);
+    	});
+
+    	$$self.$$set = $$props => {
+    		if ("carouselImages" in $$props) $$invalidate(0, carouselImages = $$props.carouselImages);
+    	};
+
+    	$$self.$capture_state = () => ({ Carousel, carouselImages });
+
+    	$$self.$inject_state = $$props => {
+    		if ("carouselImages" in $$props) $$invalidate(0, carouselImages = $$props.carouselImages);
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
+
+    	return [carouselImages];
+    }
+
+    class MultiCarousel extends SvelteComponentDev {
+    	constructor(options) {
+    		super(options);
+    		init(this, options, instance$1, create_fragment$1, safe_not_equal, { carouselImages: 0 });
+
+    		dispatch_dev("SvelteRegisterComponent", {
+    			component: this,
+    			tagName: "MultiCarousel",
+    			options,
+    			id: create_fragment$1.name
+    		});
+
+    		const { ctx } = this.$$;
+    		const props = options.props || {};
+
+    		if (/*carouselImages*/ ctx[0] === undefined && !("carouselImages" in props)) {
+    			console.warn("<MultiCarousel> was created without expected prop 'carouselImages'");
+    		}
+    	}
+
+    	get carouselImages() {
+    		throw new Error("<MultiCarousel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set carouselImages(value) {
+    		throw new Error("<MultiCarousel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+    }
+
     /* src/Grid.svelte generated by Svelte v3.32.1 */
 
     const file$1 = "src/Grid.svelte";
 
-    function create_fragment$1(ctx) {
+    function create_fragment$2(ctx) {
     	let div;
     	let current;
     	const default_slot_template = /*#slots*/ ctx[1].default;
@@ -1234,7 +1368,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$1.name,
+    		id: create_fragment$2.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1243,7 +1377,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$1($$self, $$props, $$invalidate) {
+    function instance$2($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("Grid", slots, ['default']);
     	const writable_props = [];
@@ -1262,13 +1396,13 @@ var app = (function () {
     class Grid extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$1, create_fragment$1, safe_not_equal, {});
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Grid",
     			options,
-    			id: create_fragment$1.name
+    			id: create_fragment$2.name
     		});
     	}
     }
@@ -1277,7 +1411,7 @@ var app = (function () {
 
     const file$2 = "src/Card.svelte";
 
-    function create_fragment$2(ctx) {
+    function create_fragment$3(ctx) {
     	let div2;
     	let div1;
     	let div0;
@@ -1325,7 +1459,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$2.name,
+    		id: create_fragment$3.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1334,7 +1468,7 @@ var app = (function () {
     	return block;
     }
 
-    function instance$2($$self, $$props, $$invalidate) {
+    function instance$3($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("Card", slots, []);
     	let { project } = $$props;
@@ -1367,13 +1501,13 @@ var app = (function () {
     class Card extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { project: 2 });
+    		init(this, options, instance$3, create_fragment$3, safe_not_equal, { project: 2 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "Card",
     			options,
-    			id: create_fragment$2.name
+    			id: create_fragment$3.name
     		});
 
     		const { ctx } = this.$$;
@@ -1400,13 +1534,13 @@ var app = (function () {
 
     function get_each_context$1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[2] = list[i];
+    	child_ctx[3] = list[i];
     	return child_ctx;
     }
 
-    // (69:3) {:catch error}
+    // (91:3) {:catch error}
     function create_catch_block(ctx) {
-    	let t_value = console.log(/*error*/ ctx[5].message) + "";
+    	let t_value = console.log(/*error*/ ctx[6].message) + "";
     	let t;
 
     	const block = {
@@ -1428,18 +1562,18 @@ var app = (function () {
     		block,
     		id: create_catch_block.name,
     		type: "catch",
-    		source: "(69:3) {:catch error}",
+    		source: "(91:3) {:catch error}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (65:3) {:then projects}
+    // (87:3) {:then projects}
     function create_then_block(ctx) {
     	let each_1_anchor;
     	let current;
-    	let each_value = /*projects*/ ctx[1];
+    	let each_value = /*projects*/ ctx[2];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -1469,7 +1603,7 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			if (dirty & /*fetchJSONData, projectDataUrl*/ 0) {
-    				each_value = /*projects*/ ctx[1];
+    				each_value = /*projects*/ ctx[2];
     				validate_each_argument(each_value);
     				let i;
 
@@ -1524,20 +1658,20 @@ var app = (function () {
     		block,
     		id: create_then_block.name,
     		type: "then",
-    		source: "(65:3) {:then projects}",
+    		source: "(87:3) {:then projects}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (66:4) {#each projects as project}
+    // (88:4) {#each projects as project}
     function create_each_block$1(ctx) {
     	let card;
     	let current;
 
     	card = new Card({
-    			props: { project: /*project*/ ctx[2] },
+    			props: { project: /*project*/ ctx[3] },
     			$$inline: true
     		});
 
@@ -1568,14 +1702,14 @@ var app = (function () {
     		block,
     		id: create_each_block$1.name,
     		type: "each",
-    		source: "(66:4) {#each projects as project}",
+    		source: "(88:4) {#each projects as project}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (63:41)      <p>loading</p>    {:then projects}
+    // (85:41)      <p>loading</p>    {:then projects}
     function create_pending_block(ctx) {
     	let p;
 
@@ -1583,7 +1717,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "loading";
-    			add_location(p, file$3, 63, 4, 1326);
+    			add_location(p, file$3, 85, 4, 2604);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -1600,14 +1734,14 @@ var app = (function () {
     		block,
     		id: create_pending_block.name,
     		type: "pending",
-    		source: "(63:41)      <p>loading</p>    {:then projects}",
+    		source: "(85:41)      <p>loading</p>    {:then projects}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (62:2) <Grid>
+    // (84:2) <Grid>
     function create_default_slot(ctx) {
     	let await_block_anchor;
     	let current;
@@ -1620,8 +1754,8 @@ var app = (function () {
     		pending: create_pending_block,
     		then: create_then_block,
     		catch: create_catch_block,
-    		value: 1,
-    		error: 5,
+    		value: 2,
+    		error: 6,
     		blocks: [,,,]
     	};
 
@@ -1644,7 +1778,7 @@ var app = (function () {
 
     			{
     				const child_ctx = ctx.slice();
-    				child_ctx[1] = child_ctx[5] = info.resolved;
+    				child_ctx[2] = child_ctx[6] = info.resolved;
     				info.block.p(child_ctx, dirty);
     			}
     		},
@@ -1673,14 +1807,14 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(62:2) <Grid>",
+    		source: "(84:2) <Grid>",
     		ctx
     	});
 
     	return block;
     }
 
-    function create_fragment$3(ctx) {
+    function create_fragment$4(ctx) {
     	let main;
     	let header;
     	let h1;
@@ -1692,42 +1826,15 @@ var app = (function () {
     	let li1;
     	let t5;
     	let div1;
-    	let carousel0;
+    	let multicarousel;
     	let t6;
-    	let carousel1;
-    	let t7;
-    	let carousel2;
-    	let t8;
-    	let carousel3;
-    	let t9;
     	let div2;
     	let grid;
-    	let t10;
+    	let t7;
     	let footer;
     	let current;
 
-    	carousel0 = new Carousel({
-    			props: {
-    				carouselImages: /*carouselImages*/ ctx[0]
-    			},
-    			$$inline: true
-    		});
-
-    	carousel1 = new Carousel({
-    			props: {
-    				carouselImages: /*carouselImages*/ ctx[0]
-    			},
-    			$$inline: true
-    		});
-
-    	carousel2 = new Carousel({
-    			props: {
-    				carouselImages: /*carouselImages*/ ctx[0]
-    			},
-    			$$inline: true
-    		});
-
-    	carousel3 = new Carousel({
+    	multicarousel = new MultiCarousel({
     			props: {
     				carouselImages: /*carouselImages*/ ctx[0]
     			},
@@ -1758,34 +1865,28 @@ var app = (function () {
     			li1.textContent = "Contact";
     			t5 = space();
     			div1 = element("div");
-    			create_component(carousel0.$$.fragment);
+    			create_component(multicarousel.$$.fragment);
     			t6 = space();
-    			create_component(carousel1.$$.fragment);
-    			t7 = space();
-    			create_component(carousel2.$$.fragment);
-    			t8 = space();
-    			create_component(carousel3.$$.fragment);
-    			t9 = space();
     			div2 = element("div");
     			create_component(grid.$$.fragment);
-    			t10 = space();
+    			t7 = space();
     			footer = element("footer");
     			footer.textContent = "Colophon & Copyright";
     			attr_dev(h1, "class", "svelte-js67sp");
-    			add_location(h1, file$3, 38, 2, 975);
-    			add_location(li0, file$3, 41, 4, 1009);
-    			add_location(li1, file$3, 42, 4, 1027);
-    			add_location(ul, file$3, 40, 3, 1000);
-    			add_location(div0, file$3, 39, 2, 991);
+    			add_location(h1, file$3, 69, 2, 2362);
+    			add_location(li0, file$3, 72, 4, 2396);
+    			add_location(li1, file$3, 73, 4, 2414);
+    			add_location(ul, file$3, 71, 3, 2387);
+    			add_location(div0, file$3, 70, 2, 2378);
     			attr_dev(header, "class", "svelte-js67sp");
-    			add_location(header, file$3, 37, 1, 964);
+    			add_location(header, file$3, 68, 1, 2351);
     			attr_dev(div1, "id", "carousel-container");
     			attr_dev(div1, "class", "svelte-js67sp");
-    			add_location(div1, file$3, 46, 1, 1074);
-    			add_location(div2, file$3, 60, 1, 1265);
-    			add_location(footer, file$3, 73, 1, 1513);
+    			add_location(div1, file$3, 77, 1, 2461);
+    			add_location(div2, file$3, 82, 1, 2543);
+    			add_location(footer, file$3, 95, 1, 2791);
     			attr_dev(main, "class", "svelte-js67sp");
-    			add_location(main, file$3, 36, 0, 956);
+    			add_location(main, file$3, 67, 0, 2343);
     		},
     		l: function claim(nodes) {
     			throw new Error_1("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1802,24 +1903,18 @@ var app = (function () {
     			append_dev(ul, li1);
     			append_dev(main, t5);
     			append_dev(main, div1);
-    			mount_component(carousel0, div1, null);
-    			append_dev(div1, t6);
-    			mount_component(carousel1, div1, null);
-    			append_dev(div1, t7);
-    			mount_component(carousel2, div1, null);
-    			append_dev(div1, t8);
-    			mount_component(carousel3, div1, null);
-    			append_dev(main, t9);
+    			mount_component(multicarousel, div1, null);
+    			append_dev(main, t6);
     			append_dev(main, div2);
     			mount_component(grid, div2, null);
-    			append_dev(main, t10);
+    			append_dev(main, t7);
     			append_dev(main, footer);
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
     			const grid_changes = {};
 
-    			if (dirty & /*$$scope*/ 64) {
+    			if (dirty & /*$$scope*/ 128) {
     				grid_changes.$$scope = { dirty, ctx };
     			}
 
@@ -1827,34 +1922,25 @@ var app = (function () {
     		},
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(carousel0.$$.fragment, local);
-    			transition_in(carousel1.$$.fragment, local);
-    			transition_in(carousel2.$$.fragment, local);
-    			transition_in(carousel3.$$.fragment, local);
+    			transition_in(multicarousel.$$.fragment, local);
     			transition_in(grid.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
-    			transition_out(carousel0.$$.fragment, local);
-    			transition_out(carousel1.$$.fragment, local);
-    			transition_out(carousel2.$$.fragment, local);
-    			transition_out(carousel3.$$.fragment, local);
+    			transition_out(multicarousel.$$.fragment, local);
     			transition_out(grid.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(main);
-    			destroy_component(carousel0);
-    			destroy_component(carousel1);
-    			destroy_component(carousel2);
-    			destroy_component(carousel3);
+    			destroy_component(multicarousel);
     			destroy_component(grid);
     		}
     	};
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_fragment$3.name,
+    		id: create_fragment$4.name,
     		type: "component",
     		source: "",
     		ctx
@@ -1884,41 +1970,140 @@ var app = (function () {
     	}
     }
 
-    function instance$3($$self, $$props, $$invalidate) {
+    function instance$4($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("App", slots, []);
+    	let carouselIndex = 0;
 
     	const carouselImages = [
-    		{
-    			path: "images/Flock_screenshot.png",
-    			alt: "flock1",
-    			id: "image1"
-    		},
-    		{
-    			path: "images/Flock_screenshot2.png",
-    			alt: "flock2",
-    			id: "image2"
-    		},
-    		{
-    			path: "images/Flock_screenshot3.png",
-    			alt: "flock3",
-    			id: "image3"
-    		},
-    		{
-    			path: "images/test-cm_curl.png",
-    			alt: "earth1",
-    			id: "image4"
-    		},
-    		{
-    			path: "images/test-cm_NEO_pollution_mort.png",
-    			alt: "earth2",
-    			id: "image5"
-    		},
-    		{
-    			path: "images/test-cm_New_Lacerta.png",
-    			alt: "earth3",
-    			id: "image6"
-    		}
+    		[
+    			{
+    				path: "images/Flock_screenshot.png",
+    				alt: "flock1",
+    				id: "image1"
+    			},
+    			{
+    				path: "images/Flock_screenshot2.png",
+    				alt: "flock2",
+    				id: "image2"
+    			},
+    			{
+    				path: "images/Flock_screenshot3.png",
+    				alt: "flock3",
+    				id: "image3"
+    			},
+    			{
+    				path: "images/test-cm_curl.png",
+    				alt: "earth1",
+    				id: "image4"
+    			},
+    			{
+    				path: "images/test-cm_NEO_pollution_mort.png",
+    				alt: "earth2",
+    				id: "image5"
+    			},
+    			{
+    				path: "images/test-cm_New_Lacerta.png",
+    				alt: "earth3",
+    				id: "image6"
+    			}
+    		],
+    		[
+    			{
+    				path: "images/Flock_screenshot.png",
+    				alt: "flock1",
+    				id: "image1"
+    			},
+    			{
+    				path: "images/Flock_screenshot2.png",
+    				alt: "flock2",
+    				id: "image2"
+    			},
+    			{
+    				path: "images/Flock_screenshot3.png",
+    				alt: "flock3",
+    				id: "image3"
+    			},
+    			{
+    				path: "images/test-cm_curl.png",
+    				alt: "earth1",
+    				id: "image4"
+    			},
+    			{
+    				path: "images/test-cm_NEO_pollution_mort.png",
+    				alt: "earth2",
+    				id: "image5"
+    			},
+    			{
+    				path: "images/test-cm_New_Lacerta.png",
+    				alt: "earth3",
+    				id: "image6"
+    			}
+    		],
+    		[
+    			{
+    				path: "images/Flock_screenshot.png",
+    				alt: "flock1",
+    				id: "image1"
+    			},
+    			{
+    				path: "images/Flock_screenshot2.png",
+    				alt: "flock2",
+    				id: "image2"
+    			},
+    			{
+    				path: "images/Flock_screenshot3.png",
+    				alt: "flock3",
+    				id: "image3"
+    			},
+    			{
+    				path: "images/test-cm_curl.png",
+    				alt: "earth1",
+    				id: "image4"
+    			},
+    			{
+    				path: "images/test-cm_NEO_pollution_mort.png",
+    				alt: "earth2",
+    				id: "image5"
+    			},
+    			{
+    				path: "images/test-cm_New_Lacerta.png",
+    				alt: "earth3",
+    				id: "image6"
+    			}
+    		],
+    		[
+    			{
+    				path: "images/Flock_screenshot.png",
+    				alt: "flock1",
+    				id: "image1"
+    			},
+    			{
+    				path: "images/Flock_screenshot2.png",
+    				alt: "flock2",
+    				id: "image2"
+    			},
+    			{
+    				path: "images/Flock_screenshot3.png",
+    				alt: "flock3",
+    				id: "image3"
+    			},
+    			{
+    				path: "images/test-cm_curl.png",
+    				alt: "earth1",
+    				id: "image4"
+    			},
+    			{
+    				path: "images/test-cm_NEO_pollution_mort.png",
+    				alt: "earth2",
+    				id: "image5"
+    			},
+    			{
+    				path: "images/test-cm_New_Lacerta.png",
+    				alt: "earth3",
+    				id: "image6"
+    			}
+    		]
     	];
 
     	const writable_props = [];
@@ -1928,13 +2113,22 @@ var app = (function () {
     	});
 
     	$$self.$capture_state = () => ({
-    		Carousel,
+    		MultiCarousel,
     		Grid,
     		Card,
     		projectDataUrl,
     		fetchJSONData,
+    		carouselIndex,
     		carouselImages
     	});
+
+    	$$self.$inject_state = $$props => {
+    		if ("carouselIndex" in $$props) carouselIndex = $$props.carouselIndex;
+    	};
+
+    	if ($$props && "$$inject" in $$props) {
+    		$$self.$inject_state($$props.$$inject);
+    	}
 
     	return [carouselImages];
     }
@@ -1942,13 +2136,13 @@ var app = (function () {
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$3, create_fragment$3, safe_not_equal, {});
+    		init(this, options, instance$4, create_fragment$4, safe_not_equal, {});
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
     			tagName: "App",
     			options,
-    			id: create_fragment$3.name
+    			id: create_fragment$4.name
     		});
     	}
     }
