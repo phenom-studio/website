@@ -136,6 +136,10 @@ var app = (function () {
     function empty() {
         return text('');
     }
+    function listen(node, event, handler, options) {
+        node.addEventListener(event, handler, options);
+        return () => node.removeEventListener(event, handler, options);
+    }
     function attr(node, attribute, value) {
         if (value == null)
             node.removeAttribute(attribute);
@@ -337,108 +341,121 @@ var app = (function () {
         }
     }
     const null_transition = { duration: 0 };
-    function create_bidirectional_transition(node, fn, params, intro) {
+    function create_in_transition(node, fn, params) {
         let config = fn(node, params);
-        let t = intro ? 0 : 1;
-        let running_program = null;
-        let pending_program = null;
-        let animation_name = null;
-        function clear_animation() {
+        let running = false;
+        let animation_name;
+        let task;
+        let uid = 0;
+        function cleanup() {
             if (animation_name)
                 delete_rule(node, animation_name);
         }
-        function init(program, duration) {
-            const d = program.b - t;
-            duration *= Math.abs(d);
-            return {
-                a: t,
-                b: program.b,
-                d,
-                duration,
-                start: program.start,
-                end: program.start + duration,
-                group: program.group
-            };
-        }
-        function go(b) {
+        function go() {
             const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
-            const program = {
-                start: now() + delay,
-                b
-            };
-            if (!b) {
-                // @ts-ignore todo: improve typings
-                program.group = outros;
-                outros.r += 1;
-            }
-            if (running_program || pending_program) {
-                pending_program = program;
-            }
-            else {
-                // if this is an intro, and there's a delay, we need to do
-                // an initial tick and/or apply CSS animation immediately
-                if (css) {
-                    clear_animation();
-                    animation_name = create_rule(node, t, b, duration, delay, easing, css);
+            if (css)
+                animation_name = create_rule(node, 0, 1, duration, delay, easing, css, uid++);
+            tick(0, 1);
+            const start_time = now() + delay;
+            const end_time = start_time + duration;
+            if (task)
+                task.abort();
+            running = true;
+            add_render_callback(() => dispatch(node, true, 'start'));
+            task = loop(now => {
+                if (running) {
+                    if (now >= end_time) {
+                        tick(1, 0);
+                        dispatch(node, true, 'end');
+                        cleanup();
+                        return running = false;
+                    }
+                    if (now >= start_time) {
+                        const t = easing((now - start_time) / duration);
+                        tick(t, 1 - t);
+                    }
                 }
-                if (b)
-                    tick(0, 1);
-                running_program = init(program, duration);
-                add_render_callback(() => dispatch(node, b, 'start'));
-                loop(now => {
-                    if (pending_program && now > pending_program.start) {
-                        running_program = init(pending_program, duration);
-                        pending_program = null;
-                        dispatch(node, running_program.b, 'start');
-                        if (css) {
-                            clear_animation();
-                            animation_name = create_rule(node, t, running_program.b, running_program.duration, 0, easing, config.css);
-                        }
-                    }
-                    if (running_program) {
-                        if (now >= running_program.end) {
-                            tick(t = running_program.b, 1 - t);
-                            dispatch(node, running_program.b, 'end');
-                            if (!pending_program) {
-                                // we're done
-                                if (running_program.b) {
-                                    // intro — we can tidy up immediately
-                                    clear_animation();
-                                }
-                                else {
-                                    // outro — needs to be coordinated
-                                    if (!--running_program.group.r)
-                                        run_all(running_program.group.c);
-                                }
-                            }
-                            running_program = null;
-                        }
-                        else if (now >= running_program.start) {
-                            const p = now - running_program.start;
-                            t = running_program.a + running_program.d * easing(p / running_program.duration);
-                            tick(t, 1 - t);
-                        }
-                    }
-                    return !!(running_program || pending_program);
-                });
-            }
+                return running;
+            });
         }
+        let started = false;
         return {
-            run(b) {
+            start() {
+                if (started)
+                    return;
+                delete_rule(node);
                 if (is_function(config)) {
-                    wait().then(() => {
-                        // @ts-ignore
-                        config = config();
-                        go(b);
-                    });
+                    config = config();
+                    wait().then(go);
                 }
                 else {
-                    go(b);
+                    go();
                 }
             },
+            invalidate() {
+                started = false;
+            },
             end() {
-                clear_animation();
-                running_program = pending_program = null;
+                if (running) {
+                    cleanup();
+                    running = false;
+                }
+            }
+        };
+    }
+    function create_out_transition(node, fn, params) {
+        let config = fn(node, params);
+        let running = true;
+        let animation_name;
+        const group = outros;
+        group.r += 1;
+        function go() {
+            const { delay = 0, duration = 300, easing = identity, tick = noop, css } = config || null_transition;
+            if (css)
+                animation_name = create_rule(node, 1, 0, duration, delay, easing, css);
+            const start_time = now() + delay;
+            const end_time = start_time + duration;
+            add_render_callback(() => dispatch(node, false, 'start'));
+            loop(now => {
+                if (running) {
+                    if (now >= end_time) {
+                        tick(0, 1);
+                        dispatch(node, false, 'end');
+                        if (!--group.r) {
+                            // this will result in `end()` being called,
+                            // so we don't need to clean up here
+                            run_all(group.c);
+                        }
+                        return false;
+                    }
+                    if (now >= start_time) {
+                        const t = easing((now - start_time) / duration);
+                        tick(1 - t, t);
+                    }
+                }
+                return running;
+            });
+        }
+        if (is_function(config)) {
+            wait().then(() => {
+                // @ts-ignore
+                config = config();
+                go();
+            });
+        }
+        else {
+            go();
+        }
+        return {
+            end(reset) {
+                if (reset && config.tick) {
+                    config.tick(1, 0);
+                }
+                if (running) {
+                    if (animation_name)
+                        delete_rule(node, animation_name);
+                    running = false;
+                }
             }
         };
     }
@@ -748,12 +765,32 @@ var app = (function () {
         dispatch_dev('SvelteDOMRemove', { node });
         detach(node);
     }
+    function listen_dev(node, event, handler, options, has_prevent_default, has_stop_propagation) {
+        const modifiers = options === true ? ['capture'] : options ? Array.from(Object.keys(options)) : [];
+        if (has_prevent_default)
+            modifiers.push('preventDefault');
+        if (has_stop_propagation)
+            modifiers.push('stopPropagation');
+        dispatch_dev('SvelteDOMAddEventListener', { node, event, handler, modifiers });
+        const dispose = listen(node, event, handler, options);
+        return () => {
+            dispatch_dev('SvelteDOMRemoveEventListener', { node, event, handler, modifiers });
+            dispose();
+        };
+    }
     function attr_dev(node, attribute, value) {
         attr(node, attribute, value);
         if (value == null)
             dispatch_dev('SvelteDOMRemoveAttribute', { node, attribute });
         else
             dispatch_dev('SvelteDOMSetAttribute', { node, attribute, value });
+    }
+    function set_data_dev(text, data) {
+        data = '' + data;
+        if (text.wholeText === data)
+            return;
+        dispatch_dev('SvelteDOMSetData', { node: text, data });
+        text.data = data;
     }
     function validate_each_argument(arg) {
         if (typeof arg !== 'string' && !(arg && typeof arg === 'object' && 'length' in arg)) {
@@ -791,99 +828,103 @@ var app = (function () {
         $inject_state() { }
     }
 
-    function cubicOut(t) {
-        const f = t - 1.0;
-        return f * f * f + 1.0;
-    }
-
-    function fade(node, { delay = 0, duration = 400, easing = identity } = {}) {
-        const o = +getComputedStyle(node).opacity;
-        return {
-            delay,
-            duration,
-            easing,
-            css: t => `opacity: ${t * o}`
-        };
-    }
-
-    function flip(node, animation, params = {}) {
-        const style = getComputedStyle(node);
-        const transform = style.transform === 'none' ? '' : style.transform;
-        const scaleX = animation.from.width / node.clientWidth;
-        const scaleY = animation.from.height / node.clientHeight;
-        const dx = (animation.from.left - animation.to.left) / scaleX;
-        const dy = (animation.from.top - animation.to.top) / scaleY;
-        const d = Math.sqrt(dx * dx + dy * dy);
-        const { delay = 0, duration = (d) => Math.sqrt(d) * 120, easing = cubicOut } = params;
-        return {
-            delay,
-            duration: is_function(duration) ? duration(d) : duration,
-            easing,
-            css: (_t, u) => `transform: ${transform} translate(${u * dx}px, ${u * dy}px);`
-        };
-    }
-
     /* src/components/Carousel.svelte generated by Svelte v3.32.1 */
+
+    const { console: console_1 } = globals;
     const file = "src/components/Carousel.svelte";
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[8] = list[i];
+    	child_ctx[10] = list[i];
     	return child_ctx;
     }
 
-    // (45:4) {#each [carouselImages[index][index].path] as src (index)}
+    // (46:4) {#each [carousel[index]] as item (item.id)}
     function create_each_block(key_1, ctx) {
+    	let figure;
     	let img;
     	let img_src_value;
-    	let img_style_value;
-    	let img_transition;
+    	let img_alt_value;
+    	let img_intro;
+    	let img_outro;
+    	let t0;
+    	let figcaption;
+    	let t1_value = /*item*/ ctx[10].caption + "";
+    	let t1;
+    	let t2;
     	let current;
+    	let mounted;
+    	let dispose;
 
     	const block = {
     		key: key_1,
     		first: null,
     		c: function create() {
+    			figure = element("figure");
     			img = element("img");
-    			if (img.src !== (img_src_value = /*src*/ ctx[8])) attr_dev(img, "src", img_src_value);
-    			attr_dev(img, "style", img_style_value = `width: ${/*imageWidth*/ ctx[1]}px; height: ${/*imageHeight*/ ctx[2]}px`);
-    			attr_dev(img, "class", "svelte-13hs1sq");
-    			add_location(img, file, 45, 8, 1067);
-    			this.first = img;
+    			t0 = space();
+    			figcaption = element("figcaption");
+    			t1 = text(t1_value);
+    			t2 = space();
+    			if (img.src !== (img_src_value = /*item*/ ctx[10].path)) attr_dev(img, "src", img_src_value);
+    			attr_dev(img, "alt", img_alt_value = /*item*/ ctx[10].alt);
+    			attr_dev(img, "style", `width: ${/*imageWidth*/ ctx[3]}px; height: ${/*imageHeight*/ ctx[4]}px`);
+    			attr_dev(img, "class", "svelte-129n015");
+    			add_location(img, file, 47, 8, 919);
+    			attr_dev(figcaption, "class", "svelte-129n015");
+    			add_location(figcaption, file, 54, 8, 1150);
+    			attr_dev(figure, "class", "svelte-129n015");
+    			add_location(figure, file, 46, 6, 866);
+    			this.first = figure;
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, img, anchor);
+    			insert_dev(target, figure, anchor);
+    			append_dev(figure, img);
+    			append_dev(figure, t0);
+    			append_dev(figure, figcaption);
+    			append_dev(figcaption, t1);
+    			append_dev(figure, t2);
     			current = true;
+
+    			if (!mounted) {
+    				dispose = listen_dev(figure, "click", /*click_handler*/ ctx[6], false, false, false);
+    				mounted = true;
+    			}
     		},
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
 
-    			if (!current || dirty & /*carouselImages, index*/ 9 && img.src !== (img_src_value = /*src*/ ctx[8])) {
+    			if (!current || dirty & /*carousel, index*/ 5 && img.src !== (img_src_value = /*item*/ ctx[10].path)) {
     				attr_dev(img, "src", img_src_value);
     			}
 
-    			if (!current || dirty & /*imageWidth, imageHeight*/ 6 && img_style_value !== (img_style_value = `width: ${/*imageWidth*/ ctx[1]}px; height: ${/*imageHeight*/ ctx[2]}px`)) {
-    				attr_dev(img, "style", img_style_value);
+    			if (!current || dirty & /*carousel, index*/ 5 && img_alt_value !== (img_alt_value = /*item*/ ctx[10].alt)) {
+    				attr_dev(img, "alt", img_alt_value);
     			}
+
+    			if ((!current || dirty & /*carousel, index*/ 5) && t1_value !== (t1_value = /*item*/ ctx[10].caption + "")) set_data_dev(t1, t1_value);
     		},
     		i: function intro(local) {
     			if (current) return;
 
     			add_render_callback(() => {
-    				if (!img_transition) img_transition = create_bidirectional_transition(img, fade, {}, true);
-    				img_transition.run(1);
+    				if (img_outro) img_outro.end(1);
+    				if (!img_intro) img_intro = create_in_transition(img, fade, { duration: 2000 });
+    				img_intro.start();
     			});
 
     			current = true;
     		},
     		o: function outro(local) {
-    			if (!img_transition) img_transition = create_bidirectional_transition(img, fade, {}, false);
-    			img_transition.run(0);
+    			if (img_intro) img_intro.invalidate();
+    			img_outro = create_out_transition(img, fade, { duration: 2000 });
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(img);
-    			if (detaching && img_transition) img_transition.end();
+    			if (detaching) detach_dev(figure);
+    			if (detaching && img_outro) img_outro.end();
+    			mounted = false;
+    			dispose();
     		}
     	};
 
@@ -891,7 +932,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(45:4) {#each [carouselImages[index][index].path] as src (index)}",
+    		source: "(46:4) {#each [carousel[index]] as item (item.id)}",
     		ctx
     	});
 
@@ -903,9 +944,9 @@ var app = (function () {
     	let each_blocks = [];
     	let each_1_lookup = new Map();
     	let current;
-    	let each_value = [/*carouselImages*/ ctx[0][/*index*/ ctx[3]][/*index*/ ctx[3]].path];
+    	let each_value = [/*carousel*/ ctx[0][/*index*/ ctx[2]]];
     	validate_each_argument(each_value);
-    	const get_key = ctx => /*index*/ ctx[3];
+    	const get_key = ctx => /*item*/ ctx[10].id;
     	validate_each_keys(ctx, each_value, get_each_context, get_key);
 
     	for (let i = 0; i < 1; i += 1) {
@@ -923,8 +964,8 @@ var app = (function () {
     			}
 
     			attr_dev(div, "id", "carousel-images");
-    			attr_dev(div, "class", "svelte-13hs1sq");
-    			add_location(div, file, 35, 2, 752);
+    			attr_dev(div, "class", "svelte-129n015");
+    			add_location(div, file, 43, 2, 736);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -939,8 +980,8 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*carouselImages, index, imageWidth, imageHeight*/ 15) {
-    				each_value = [/*carouselImages*/ ctx[0][/*index*/ ctx[3]][/*index*/ ctx[3]].path];
+    			if (dirty & /*console, i, carousel, index, imageWidth, imageHeight*/ 31) {
+    				each_value = [/*carousel*/ ctx[0][/*index*/ ctx[2]]];
     				validate_each_argument(each_value);
     				group_outros();
     				validate_each_keys(ctx, each_value, get_each_context, get_key);
@@ -984,65 +1025,74 @@ var app = (function () {
     	return block;
     }
 
+    function fade(node, { delay = 0, duration = 400 }) {
+    	const o = +getComputedStyle(node).opacity;
+
+    	return {
+    		delay,
+    		duration,
+    		css: t => `opacity: ${t * o}`
+    	};
+    }
+
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("Carousel", slots, []);
-    	let { carouselImages } = $$props;
-    	let { imageWidth = 200 } = $$props;
-    	let { imageHeight = 300 } = $$props;
-    	let { transitionDuration = 2000 } = $$props;
-    	let { transitionDelay = 2000 } = $$props;
+    	let { carousel } = $$props;
+    	let { i } = $$props;
+    	let imageWidth = 400;
+    	let imageHeight = 600;
+    	let transitionDuration = 2000;
+    	let transitionDelay = 3000;
     	let index = 0;
     	let run;
-    	const next = () => $$invalidate(3, index = (index + 1) % carouselImages.length);
+    	const next = () => $$invalidate(2, index = (index + 1) % carousel.length);
 
-    	setTimeout(
-    		() => {
-    			next();
-    		},
-    		2000
-    	);
+    	if (i == 0) {
+    		transitionDelay = 5000;
+    	} else if (i == 1) {
+    		transitionDelay = 9000;
+    	} else if (i == 2) {
+    		transitionDelay = 7000;
+    	}
 
-    	const writable_props = [
-    		"carouselImages",
-    		"imageWidth",
-    		"imageHeight",
-    		"transitionDuration",
-    		"transitionDelay"
-    	];
+    	setTimeout(next, transitionDelay);
+    	const writable_props = ["carousel", "i"];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Carousel> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<Carousel> was created with unknown prop '${key}'`);
     	});
 
+    	const click_handler = () => {
+    		console.log(i);
+    	};
+
     	$$self.$$set = $$props => {
-    		if ("carouselImages" in $$props) $$invalidate(0, carouselImages = $$props.carouselImages);
-    		if ("imageWidth" in $$props) $$invalidate(1, imageWidth = $$props.imageWidth);
-    		if ("imageHeight" in $$props) $$invalidate(2, imageHeight = $$props.imageHeight);
-    		if ("transitionDuration" in $$props) $$invalidate(4, transitionDuration = $$props.transitionDuration);
-    		if ("transitionDelay" in $$props) $$invalidate(5, transitionDelay = $$props.transitionDelay);
+    		if ("carousel" in $$props) $$invalidate(0, carousel = $$props.carousel);
+    		if ("i" in $$props) $$invalidate(1, i = $$props.i);
     	};
 
     	$$self.$capture_state = () => ({
-    		fade,
-    		flip,
-    		carouselImages,
+    		carousel,
+    		i,
     		imageWidth,
     		imageHeight,
     		transitionDuration,
     		transitionDelay,
+    		fade,
     		index,
     		run,
     		next
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ("carouselImages" in $$props) $$invalidate(0, carouselImages = $$props.carouselImages);
-    		if ("imageWidth" in $$props) $$invalidate(1, imageWidth = $$props.imageWidth);
-    		if ("imageHeight" in $$props) $$invalidate(2, imageHeight = $$props.imageHeight);
-    		if ("transitionDuration" in $$props) $$invalidate(4, transitionDuration = $$props.transitionDuration);
+    		if ("carousel" in $$props) $$invalidate(0, carousel = $$props.carousel);
+    		if ("i" in $$props) $$invalidate(1, i = $$props.i);
+    		if ("imageWidth" in $$props) $$invalidate(3, imageWidth = $$props.imageWidth);
+    		if ("imageHeight" in $$props) $$invalidate(4, imageHeight = $$props.imageHeight);
+    		if ("transitionDuration" in $$props) transitionDuration = $$props.transitionDuration;
     		if ("transitionDelay" in $$props) $$invalidate(5, transitionDelay = $$props.transitionDelay);
-    		if ("index" in $$props) $$invalidate(3, index = $$props.index);
+    		if ("index" in $$props) $$invalidate(2, index = $$props.index);
     		if ("run" in $$props) run = $$props.run;
     	};
 
@@ -1052,42 +1102,19 @@ var app = (function () {
 
     	$$self.$$.update = () => {
     		if ($$self.$$.dirty & /*transitionDelay*/ 32) {
-    			// const flipImageArray = () => {
-    			//   images = [...images.slice(1, images.length), images[0]]
-    			// }
-    			// const startAutoPlay = () => {
-    			//     interval = setInterval(rotateLeft, autoplaySpeed)
-    			// }
-    			// const stopAutoPlay = () => {
-    			//   clearInterval(interval)
-    			// }
     			 {
     				run = setInterval(next, transitionDelay);
     			}
     		}
     	};
 
-    	return [
-    		carouselImages,
-    		imageWidth,
-    		imageHeight,
-    		index,
-    		transitionDuration,
-    		transitionDelay
-    	];
+    	return [carousel, i, index, imageWidth, imageHeight, transitionDelay, click_handler];
     }
 
     class Carousel extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-
-    		init(this, options, instance, create_fragment, safe_not_equal, {
-    			carouselImages: 0,
-    			imageWidth: 1,
-    			imageHeight: 2,
-    			transitionDuration: 4,
-    			transitionDelay: 5
-    		});
+    		init(this, options, instance, create_fragment, safe_not_equal, { carousel: 0, i: 1 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -1099,152 +1126,176 @@ var app = (function () {
     		const { ctx } = this.$$;
     		const props = options.props || {};
 
-    		if (/*carouselImages*/ ctx[0] === undefined && !("carouselImages" in props)) {
-    			console.warn("<Carousel> was created without expected prop 'carouselImages'");
+    		if (/*carousel*/ ctx[0] === undefined && !("carousel" in props)) {
+    			console_1.warn("<Carousel> was created without expected prop 'carousel'");
+    		}
+
+    		if (/*i*/ ctx[1] === undefined && !("i" in props)) {
+    			console_1.warn("<Carousel> was created without expected prop 'i'");
     		}
     	}
 
-    	get carouselImages() {
+    	get carousel() {
     		throw new Error("<Carousel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set carouselImages(value) {
+    	set carousel(value) {
     		throw new Error("<Carousel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	get imageWidth() {
+    	get i() {
     		throw new Error("<Carousel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
-    	set imageWidth(value) {
-    		throw new Error("<Carousel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get imageHeight() {
-    		throw new Error("<Carousel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set imageHeight(value) {
-    		throw new Error("<Carousel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get transitionDuration() {
-    		throw new Error("<Carousel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set transitionDuration(value) {
-    		throw new Error("<Carousel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	get transitionDelay() {
-    		throw new Error("<Carousel>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
-    	}
-
-    	set transitionDelay(value) {
+    	set i(value) {
     		throw new Error("<Carousel>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
     /* src/components/MultiCarousel.svelte generated by Svelte v3.32.1 */
 
-    function create_fragment$1(ctx) {
-    	let carousel0;
-    	let t0;
-    	let carousel1;
-    	let t1;
-    	let carousel2;
-    	let t2;
-    	let carousel3;
+    function get_each_context$1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[1] = list[i];
+    	child_ctx[3] = i;
+    	return child_ctx;
+    }
+
+    // (8:0) {#each carouselImages as carousel, i}
+    function create_each_block$1(ctx) {
+    	let carousel;
     	let current;
 
-    	carousel0 = new Carousel({
+    	carousel = new Carousel({
     			props: {
-    				carouselImages: /*carouselImages*/ ctx[0]
-    			},
-    			$$inline: true
-    		});
-
-    	carousel1 = new Carousel({
-    			props: {
-    				carouselImages: /*carouselImages*/ ctx[0]
-    			},
-    			$$inline: true
-    		});
-
-    	carousel2 = new Carousel({
-    			props: {
-    				carouselImages: /*carouselImages*/ ctx[0]
-    			},
-    			$$inline: true
-    		});
-
-    	carousel3 = new Carousel({
-    			props: {
-    				carouselImages: /*carouselImages*/ ctx[0]
+    				carousel: /*carousel*/ ctx[1],
+    				i: /*i*/ ctx[3]
     			},
     			$$inline: true
     		});
 
     	const block = {
     		c: function create() {
-    			create_component(carousel0.$$.fragment);
-    			t0 = space();
-    			create_component(carousel1.$$.fragment);
-    			t1 = space();
-    			create_component(carousel2.$$.fragment);
-    			t2 = space();
-    			create_component(carousel3.$$.fragment);
+    			create_component(carousel.$$.fragment);
+    		},
+    		m: function mount(target, anchor) {
+    			mount_component(carousel, target, anchor);
+    			current = true;
+    		},
+    		p: function update(ctx, dirty) {
+    			const carousel_changes = {};
+    			if (dirty & /*carouselImages*/ 1) carousel_changes.carousel = /*carousel*/ ctx[1];
+    			carousel.$set(carousel_changes);
+    		},
+    		i: function intro(local) {
+    			if (current) return;
+    			transition_in(carousel.$$.fragment, local);
+    			current = true;
+    		},
+    		o: function outro(local) {
+    			transition_out(carousel.$$.fragment, local);
+    			current = false;
+    		},
+    		d: function destroy(detaching) {
+    			destroy_component(carousel, detaching);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block$1.name,
+    		type: "each",
+    		source: "(8:0) {#each carouselImages as carousel, i}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    function create_fragment$1(ctx) {
+    	let each_1_anchor;
+    	let current;
+    	let each_value = /*carouselImages*/ ctx[0];
+    	validate_each_argument(each_value);
+    	let each_blocks = [];
+
+    	for (let i = 0; i < each_value.length; i += 1) {
+    		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+    	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
+
+    	const block = {
+    		c: function create() {
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].c();
+    			}
+
+    			each_1_anchor = empty();
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			mount_component(carousel0, target, anchor);
-    			insert_dev(target, t0, anchor);
-    			mount_component(carousel1, target, anchor);
-    			insert_dev(target, t1, anchor);
-    			mount_component(carousel2, target, anchor);
-    			insert_dev(target, t2, anchor);
-    			mount_component(carousel3, target, anchor);
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				each_blocks[i].m(target, anchor);
+    			}
+
+    			insert_dev(target, each_1_anchor, anchor);
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			const carousel0_changes = {};
-    			if (dirty & /*carouselImages*/ 1) carousel0_changes.carouselImages = /*carouselImages*/ ctx[0];
-    			carousel0.$set(carousel0_changes);
-    			const carousel1_changes = {};
-    			if (dirty & /*carouselImages*/ 1) carousel1_changes.carouselImages = /*carouselImages*/ ctx[0];
-    			carousel1.$set(carousel1_changes);
-    			const carousel2_changes = {};
-    			if (dirty & /*carouselImages*/ 1) carousel2_changes.carouselImages = /*carouselImages*/ ctx[0];
-    			carousel2.$set(carousel2_changes);
-    			const carousel3_changes = {};
-    			if (dirty & /*carouselImages*/ 1) carousel3_changes.carouselImages = /*carouselImages*/ ctx[0];
-    			carousel3.$set(carousel3_changes);
+    			if (dirty & /*carouselImages*/ 1) {
+    				each_value = /*carouselImages*/ ctx[0];
+    				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context$1(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block$1(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
+    					}
+    				}
+
+    				group_outros();
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
+    				check_outros();
+    			}
     		},
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(carousel0.$$.fragment, local);
-    			transition_in(carousel1.$$.fragment, local);
-    			transition_in(carousel2.$$.fragment, local);
-    			transition_in(carousel3.$$.fragment, local);
+
+    			for (let i = 0; i < each_value.length; i += 1) {
+    				transition_in(each_blocks[i]);
+    			}
+
     			current = true;
     		},
     		o: function outro(local) {
-    			transition_out(carousel0.$$.fragment, local);
-    			transition_out(carousel1.$$.fragment, local);
-    			transition_out(carousel2.$$.fragment, local);
-    			transition_out(carousel3.$$.fragment, local);
+    			each_blocks = each_blocks.filter(Boolean);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				transition_out(each_blocks[i]);
+    			}
+
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			destroy_component(carousel0, detaching);
-    			if (detaching) detach_dev(t0);
-    			destroy_component(carousel1, detaching);
-    			if (detaching) detach_dev(t1);
-    			destroy_component(carousel2, detaching);
-    			if (detaching) detach_dev(t2);
-    			destroy_component(carousel3, detaching);
+    			destroy_each(each_blocks, detaching);
+    			if (detaching) detach_dev(each_1_anchor);
     		}
     	};
 
@@ -1529,16 +1580,16 @@ var app = (function () {
 
     /* src/App.svelte generated by Svelte v3.32.1 */
 
-    const { Error: Error_1, console: console_1 } = globals;
+    const { Error: Error_1, console: console_1$1 } = globals;
     const file$3 = "src/App.svelte";
 
-    function get_each_context$1(ctx, list, i) {
+    function get_each_context$2(ctx, list, i) {
     	const child_ctx = ctx.slice();
     	child_ctx[3] = list[i];
     	return child_ctx;
     }
 
-    // (91:3) {:catch error}
+    // (84:3) {:catch error}
     function create_catch_block(ctx) {
     	let t_value = console.log(/*error*/ ctx[6].message) + "";
     	let t;
@@ -1562,14 +1613,14 @@ var app = (function () {
     		block,
     		id: create_catch_block.name,
     		type: "catch",
-    		source: "(91:3) {:catch error}",
+    		source: "(84:3) {:catch error}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (87:3) {:then projects}
+    // (80:3) {:then projects}
     function create_then_block(ctx) {
     	let each_1_anchor;
     	let current;
@@ -1578,7 +1629,7 @@ var app = (function () {
     	let each_blocks = [];
 
     	for (let i = 0; i < each_value.length; i += 1) {
-    		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+    		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
     	}
 
     	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -1608,13 +1659,13 @@ var app = (function () {
     				let i;
 
     				for (i = 0; i < each_value.length; i += 1) {
-    					const child_ctx = get_each_context$1(ctx, each_value, i);
+    					const child_ctx = get_each_context$2(ctx, each_value, i);
 
     					if (each_blocks[i]) {
     						each_blocks[i].p(child_ctx, dirty);
     						transition_in(each_blocks[i], 1);
     					} else {
-    						each_blocks[i] = create_each_block$1(child_ctx);
+    						each_blocks[i] = create_each_block$2(child_ctx);
     						each_blocks[i].c();
     						transition_in(each_blocks[i], 1);
     						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
@@ -1658,15 +1709,15 @@ var app = (function () {
     		block,
     		id: create_then_block.name,
     		type: "then",
-    		source: "(87:3) {:then projects}",
+    		source: "(80:3) {:then projects}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (88:4) {#each projects as project}
-    function create_each_block$1(ctx) {
+    // (81:4) {#each projects as project}
+    function create_each_block$2(ctx) {
     	let card;
     	let current;
 
@@ -1700,16 +1751,16 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block$1.name,
+    		id: create_each_block$2.name,
     		type: "each",
-    		source: "(88:4) {#each projects as project}",
+    		source: "(81:4) {#each projects as project}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (85:41)      <p>loading</p>    {:then projects}
+    // (78:41)      <p>loading</p>    {:then projects}
     function create_pending_block(ctx) {
     	let p;
 
@@ -1717,7 +1768,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "loading";
-    			add_location(p, file$3, 85, 4, 2604);
+    			add_location(p, file$3, 78, 4, 3074);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -1734,14 +1785,14 @@ var app = (function () {
     		block,
     		id: create_pending_block.name,
     		type: "pending",
-    		source: "(85:41)      <p>loading</p>    {:then projects}",
+    		source: "(78:41)      <p>loading</p>    {:then projects}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (84:2) <Grid>
+    // (77:2) <Grid>
     function create_default_slot(ctx) {
     	let await_block_anchor;
     	let current;
@@ -1807,7 +1858,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(84:2) <Grid>",
+    		source: "(77:2) <Grid>",
     		ctx
     	});
 
@@ -1872,21 +1923,21 @@ var app = (function () {
     			t7 = space();
     			footer = element("footer");
     			footer.textContent = "Colophon & Copyright";
-    			attr_dev(h1, "class", "svelte-js67sp");
-    			add_location(h1, file$3, 69, 2, 2362);
-    			add_location(li0, file$3, 72, 4, 2396);
-    			add_location(li1, file$3, 73, 4, 2414);
-    			add_location(ul, file$3, 71, 3, 2387);
-    			add_location(div0, file$3, 70, 2, 2378);
-    			attr_dev(header, "class", "svelte-js67sp");
-    			add_location(header, file$3, 68, 1, 2351);
+    			attr_dev(h1, "class", "svelte-1mjrpli");
+    			add_location(h1, file$3, 62, 2, 2832);
+    			add_location(li0, file$3, 65, 4, 2866);
+    			add_location(li1, file$3, 66, 4, 2884);
+    			add_location(ul, file$3, 64, 3, 2857);
+    			add_location(div0, file$3, 63, 2, 2848);
+    			attr_dev(header, "class", "svelte-1mjrpli");
+    			add_location(header, file$3, 61, 1, 2821);
     			attr_dev(div1, "id", "carousel-container");
-    			attr_dev(div1, "class", "svelte-js67sp");
-    			add_location(div1, file$3, 77, 1, 2461);
-    			add_location(div2, file$3, 82, 1, 2543);
-    			add_location(footer, file$3, 95, 1, 2791);
-    			attr_dev(main, "class", "svelte-js67sp");
-    			add_location(main, file$3, 67, 0, 2343);
+    			attr_dev(div1, "class", "svelte-1mjrpli");
+    			add_location(div1, file$3, 70, 1, 2931);
+    			add_location(div2, file$3, 75, 1, 3013);
+    			add_location(footer, file$3, 88, 1, 3261);
+    			attr_dev(main, "class", "svelte-1mjrpli");
+    			add_location(main, file$3, 60, 0, 2813);
     		},
     		l: function claim(nodes) {
     			throw new Error_1("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1961,8 +2012,6 @@ var app = (function () {
     		data.push(jsonObj[item]);
     	}
 
-    	console.log(data);
-
     	if (res.ok) {
     		return data;
     	} else {
@@ -1973,135 +2022,133 @@ var app = (function () {
     function instance$4($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots("App", slots, []);
-    	let carouselIndex = 0;
+    	let id = 0;
 
     	const carouselImages = [
     		[
     			{
-    				path: "images/Flock_screenshot.png",
-    				alt: "flock1",
-    				id: "image1"
-    			},
-    			{
-    				path: "images/Flock_screenshot2.png",
-    				alt: "flock2",
-    				id: "image2"
-    			},
-    			{
-    				path: "images/Flock_screenshot3.png",
-    				alt: "flock3",
-    				id: "image3"
-    			},
-    			{
-    				path: "images/test-cm_curl.png",
-    				alt: "earth1",
-    				id: "image4"
-    			},
-    			{
-    				path: "images/test-cm_NEO_pollution_mort.png",
-    				alt: "earth2",
-    				id: "image5"
-    			},
-    			{
-    				path: "images/test-cm_New_Lacerta.png",
+    				path: "images/Flock/MKG_Beauty_Ausstellungsansicht_1_full.jpg",
     				alt: "earth3",
-    				id: "image6"
+    				caption: "Flock installation at MKG Hamburg",
+    				id: id++
+    			},
+    			{
+    				path: "images/Flock/003_20181023_m.JPG",
+    				alt: "flock1",
+    				caption: "Flock installation at MAK Vienna",
+    				id: id++
+    			},
+    			{
+    				path: "images/Flock/015_20181023_m.JPG",
+    				alt: "flock2",
+    				caption: "Beauty Show opening party",
+    				id: id++
+    			},
+    			{
+    				path: "images/Flock/Beauty-3C4B-2019-23-768x432.jpg",
+    				alt: "flock3",
+    				caption: "Visitors to Flock at MAK Vienna",
+    				id: id++
+    			},
+    			{
+    				path: "images/Flock/Hamburg_Foto_Henning_Rogge_5.jpg",
+    				alt: "earth1",
+    				caption: "Flock installation at MKG Hamburg",
+    				id: id++
+    			},
+    			{
+    				path: "images/Flock/IMG_7802.jpg",
+    				alt: "earth2",
+    				caption: "Visitor with Flock at Beauty Show opening party",
+    				id: id++
     			}
     		],
     		[
     			{
-    				path: "images/Flock_screenshot.png",
+    				path: "images/SeeingEarth/earth-visualisation.jpg",
     				alt: "flock1",
-    				id: "image1"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/Flock_screenshot2.png",
+    				path: "images/SeeingEarth/2019-08-28-0130.png",
+    				alt: "flock1",
+    				caption: "lovely picture",
+    				id: id++
+    			},
+    			{
+    				path: "images/SeeingEarth/1880.png",
+    				alt: "flock1",
+    				caption: "lovely picture",
+    				id: id++
+    			},
+    			{
+    				path: "images/SeeingEarth/2019-08-20-000000.png",
     				alt: "flock2",
-    				id: "image2"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/Flock_screenshot3.png",
+    				path: "images/SeeingEarth/2019-09-02-000000.png",
     				alt: "flock3",
-    				id: "image3"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/test-cm_curl.png",
+    				path: "images/SeeingEarth/2019-09-08-0730.png",
     				alt: "earth1",
-    				id: "image4"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/test-cm_NEO_pollution_mort.png",
+    				path: "images/SeeingEarth/2019-10-11-163000.png",
     				alt: "earth2",
-    				id: "image5"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/test-cm_New_Lacerta.png",
+    				path: "images/SeeingEarth/2019-10-13-001535.jpg",
     				alt: "earth3",
-    				id: "image6"
+    				caption: "lovely picture",
+    				id: id++
     			}
     		],
     		[
     			{
-    				path: "images/Flock_screenshot.png",
+    				path: "images/Rain+Terrain/ar-sandbox.jpg",
     				alt: "flock1",
-    				id: "image1"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/Flock_screenshot2.png",
+    				path: "images/Rain+Terrain/131547489_381821539545701_4592621555594319789_n.jpg",
     				alt: "flock2",
-    				id: "image2"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/Flock_screenshot3.png",
+    				path: "images/Rain+Terrain/IMG_0509.JPG",
     				alt: "flock3",
-    				id: "image3"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/test-cm_curl.png",
+    				path: "images/Rain+Terrain/IMG_0803.JPG",
     				alt: "earth1",
-    				id: "image4"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/test-cm_NEO_pollution_mort.png",
+    				path: "images/Rain+Terrain/IMG_0890.jpg",
     				alt: "earth2",
-    				id: "image5"
+    				caption: "lovely picture",
+    				id: id++
     			},
     			{
-    				path: "images/test-cm_New_Lacerta.png",
+    				path: "images/Rain+Terrain/IMG_7602 2.JPG",
     				alt: "earth3",
-    				id: "image6"
-    			}
-    		],
-    		[
-    			{
-    				path: "images/Flock_screenshot.png",
-    				alt: "flock1",
-    				id: "image1"
-    			},
-    			{
-    				path: "images/Flock_screenshot2.png",
-    				alt: "flock2",
-    				id: "image2"
-    			},
-    			{
-    				path: "images/Flock_screenshot3.png",
-    				alt: "flock3",
-    				id: "image3"
-    			},
-    			{
-    				path: "images/test-cm_curl.png",
-    				alt: "earth1",
-    				id: "image4"
-    			},
-    			{
-    				path: "images/test-cm_NEO_pollution_mort.png",
-    				alt: "earth2",
-    				id: "image5"
-    			},
-    			{
-    				path: "images/test-cm_New_Lacerta.png",
-    				alt: "earth3",
-    				id: "image6"
+    				caption: "lovely picture",
+    				id: id++
     			}
     		]
     	];
@@ -2109,7 +2156,7 @@ var app = (function () {
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<App> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$1.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
     	$$self.$capture_state = () => ({
@@ -2118,12 +2165,12 @@ var app = (function () {
     		Card,
     		projectDataUrl,
     		fetchJSONData,
-    		carouselIndex,
+    		id,
     		carouselImages
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ("carouselIndex" in $$props) carouselIndex = $$props.carouselIndex;
+    		if ("id" in $$props) id = $$props.id;
     	};
 
     	if ($$props && "$$inject" in $$props) {

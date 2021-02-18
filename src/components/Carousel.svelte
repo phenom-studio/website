@@ -1,62 +1,87 @@
 <script>
-  import { fade } from 'svelte/transition';
-  import { flip } from 'svelte/animate'
-  export let carouselImages;
-  export let imageWidth = 200;
-  export let imageHeight = 300;
-  export let transitionDuration = 2000;
-  export let transitionDelay = 2000;
+  export let carousel;
+  export let i;
+  let imageWidth = 400;
+  let imageHeight = 600;
+  let transitionDuration = 2000;
+  let transitionDelay = 3000;
+
+  function fade(node, {
+      delay = 0,
+      duration = 400
+    }) {
+      const o = +getComputedStyle(node).opacity;
+
+      return {
+        delay,
+        duration,
+        css: t => `opacity: ${t * o}`
+      };
+  }
 
   let index = 0;
   let run;
 
   const next = () =>
-    index = (index + 1) % carouselImages.length
-
-  // const flipImageArray = () => {
-  //   images = [...images.slice(1, images.length), images[0]]
-  // }
-
-  // const startAutoPlay = () => {
-  //     interval = setInterval(rotateLeft, autoplaySpeed)
-  // }
-
-  // const stopAutoPlay = () => {
-  //   clearInterval(interval)
-  // }
+    index = (index + 1) % carousel.length
 
   $: {
     run = setInterval(next, transitionDelay);
   }
 
-  setTimeout(() => {next()}, 2000);
+  if (i == 0 ) {
+    transitionDelay = 5000;
+  } else if (i == 1) {
+    transitionDelay = 9000;
+  } else if (i == 2) {
+    transitionDelay = 7000;
+  }
+
+  setTimeout(next, transitionDelay);
 
 </script>
 
   <div id="carousel-images">
-    <!-- {#each images as image (image.id)}
-      <img
-        src={image.path}
-        alt={image.alt}
-        style={`width: ${imageWidth}px; height: ${imageHeight}px`}
-        animate:flip
-      />
-    {/each} -->
-    {#each [carouselImages[index][index].path] as src (index)}
+    <!-- todo: if status code != 200, skip -->
+    {#each [carousel[index]] as item (item.id)}  
+      <figure on:click = {() => {console.log(i)}}>
         <img
-          transition:fade
-          {src}
+          out:fade="{{ duration: 2000 }}"
+          in:fade="{{ duration: 2000 }}"
+          src = {item.path}
+          alt = {item.alt}
           style={`width: ${imageWidth}px; height: ${imageHeight}px`}
         />
+        <figcaption>{item.caption}</figcaption>
+      </figure>
     {/each}
   </div>
 
 <style>
+
   #carousel-images {
-    width: 200px;
+    position: relative;
+    width: 400px;
+    height: 600px;
   }
 
-  img {
+  figure, img {
     position: absolute;
+    width: 400px;
+    height: 600px;
   }
+
+  figure {
+    margin-block-start: 0;
+      margin-block-end: 0;
+      margin-inline-start: 0;
+      margin-inline-end: 0;
+  }
+
+  figcaption {
+    position: relative;
+    top: -40px;
+    color: white;
+  }
+  
   </style>

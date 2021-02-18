@@ -3,6 +3,8 @@
 	import Grid from './Grid.svelte';
 	import Card from './Card.svelte';
 
+	// data //
+
 	const projectDataUrl = "./projects.json";
 
 	async function fetchJSONData(url) {
@@ -14,8 +16,6 @@
 			data.push(jsonObj[item]);
 		}
 
-		console.log(data);
-
 		if (res.ok) {
 			return data;
 		} else {
@@ -23,43 +23,36 @@
 		}
 	}
 
-	let carouselIndex = 0;
+	let id = 0;
 
 	const carouselImages = [
 		[
-			{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
-			{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
-			{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
-			{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
-			{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
-			{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
+			{path: "images/Flock/MKG_Beauty_Ausstellungsansicht_1_full.jpg", alt: "earth3", caption: "Flock installation at MKG Hamburg", id: id++ },
+			{path: "images/Flock/003_20181023_m.JPG", alt: "flock1", caption: "Flock installation at MAK Vienna", id: id++ },
+			{path: "images/Flock/015_20181023_m.JPG", alt: "flock2", caption: "Beauty Show opening party", id: id++ },
+			{path: "images/Flock/Beauty-3C4B-2019-23-768x432.jpg", alt: "flock3", caption: "Visitors to Flock at MAK Vienna", id: id++ },
+			{path: "images/Flock/Hamburg_Foto_Henning_Rogge_5.jpg", alt: "earth1", caption: "Flock installation at MKG Hamburg", id: id++ },
+			{path: "images/Flock/IMG_7802.jpg", alt: "earth2", caption: "Visitor with Flock at Beauty Show opening party", id: id++ }
 		],
 
 		[
-			{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
-			{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
-			{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
-			{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
-			{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
-			{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
+			{path: "images/SeeingEarth/earth-visualisation.jpg", alt: "flock1", caption: "lovely picture", id: id++ },
+			{path: "images/SeeingEarth/2019-08-28-0130.png", alt: "flock1", caption: "lovely picture", id: id++ },
+			{path: "images/SeeingEarth/1880.png", alt: "flock1", caption: "lovely picture", id: id++ },
+			{path: "images/SeeingEarth/2019-08-20-000000.png", alt: "flock2", caption: "lovely picture", id: id++ },
+			{path: "images/SeeingEarth/2019-09-02-000000.png", alt: "flock3", caption: "lovely picture", id: id++ },
+			{path: "images/SeeingEarth/2019-09-08-0730.png", alt: "earth1", caption: "lovely picture", id: id++ },
+			{path: "images/SeeingEarth/2019-10-11-163000.png", alt: "earth2", caption: "lovely picture", id: id++ },
+			{path: "images/SeeingEarth/2019-10-13-001535.jpg", alt: "earth3", caption: "lovely picture", id: id++ }
 		],
 
 		[
-			{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
-			{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
-			{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
-			{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
-			{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
-			{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
-		],
-
-		[
-			{path: "images/Flock_screenshot.png", alt: "flock1", id: "image1"},
-			{path: "images/Flock_screenshot2.png", alt: "flock2", id: "image2"},
-			{path: "images/Flock_screenshot3.png", alt: "flock3", id: "image3"},
-			{path: "images/test-cm_curl.png", alt: "earth1", id: "image4"},
-			{path: "images/test-cm_NEO_pollution_mort.png", alt: "earth2", id: "image5"},
-			{path: "images/test-cm_New_Lacerta.png", alt: "earth3", id: "image6"}
+			{path: "images/Rain+Terrain/ar-sandbox.jpg", alt: "flock1", caption: "lovely picture", id: id++ },
+			{path: "images/Rain+Terrain/131547489_381821539545701_4592621555594319789_n.jpg", alt: "flock2", caption: "lovely picture", id: id++ },
+			{path: "images/Rain+Terrain/IMG_0509.JPG", alt: "flock3", caption: "lovely picture", id: id++ },
+			{path: "images/Rain+Terrain/IMG_0803.JPG", alt: "earth1", caption: "lovely picture", id: id++ },
+			{path: "images/Rain+Terrain/IMG_0890.jpg", alt: "earth2", caption: "lovely picture", id: id++ },
+			{path: "images/Rain+Terrain/IMG_7602 2.JPG", alt: "earth3", caption: "lovely picture", id: id++ }
 		]
 	]
 
@@ -99,6 +92,7 @@
 </main>
 
 <style lang="scss">
+
 	main {
 		text-align: left;
 		color: black;
@@ -119,7 +113,6 @@
 
 	#carousel-container {
 		width: 100%;
-		height: 300px;
 		display: flex;
 		flex-wrap: nowrap;
 		flex-direction: row;

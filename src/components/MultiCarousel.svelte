@@ -5,15 +5,15 @@
 
 </script>
 
-<Carousel 
-    {carouselImages}
-/>
-<Carousel 
-    {carouselImages}
-/>
-<Carousel 
-    {carouselImages}
-/>
-<Carousel 
-    {carouselImages}
-/>
+{#each carouselImages as carousel, i}
+    <Carousel 
+        {carousel}
+        {i}
+    />
+{/each}
+
+<style>
+    Carousel {
+        margin-bottom: 30px;
+    }
+</style>
