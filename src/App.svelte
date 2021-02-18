@@ -1,6 +1,7 @@
 <script>
 	import MultiCarousel from './components/MultiCarousel.svelte';
-	import Grid from './Grid.svelte';
+	// import Grid from './Grid.svelte';
+	import Theater from './Theater.svelte';
 	import Card from './Card.svelte';
 
 	// data //
@@ -74,7 +75,7 @@
 		/>
 	</div>
 	<div>
-		<Grid>
+		<Theater>
 			{#await fetchJSONData(projectDataUrl)}
 				<p>loading</p>
 			{:then projects}
@@ -84,7 +85,7 @@
 			{:catch error}
 				{(console.log(error.message))}
 			{/await}
-		</Grid>
+		</Theater>
 	</div>
 	<footer>
 		Colophon & Copyright

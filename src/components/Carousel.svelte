@@ -1,7 +1,7 @@
 <script>
   export let carousel;
   export let i;
-  let imageWidth = 400;
+  let imageWidth = 420;
   let imageHeight = 600;
   let transitionDuration = 2000;
   let transitionDelay = 3000;
@@ -61,14 +61,12 @@
 
   #carousel-images {
     position: relative;
-    width: 400px;
+    width: 420px;
     height: 600px;
   }
 
   figure, img {
     position: absolute;
-    width: 400px;
-    height: 600px;
   }
 
   figure {
@@ -83,5 +81,5 @@
     top: -40px;
     color: white;
   }
-  
+
   </style>

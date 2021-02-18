@@ -5,12 +5,13 @@
 .pnp.js
 
 # production
-public/build/
-public/images/
+/public/build/
+/public/images/
 
 # development
 .yarn
 .yarnrc.yml
+/reference_images/
 
 # notes
 Notes.txt
