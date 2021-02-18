@@ -104,18 +104,20 @@
 	}
 
 	header {
+		position: fixed;
+		top: 0;
 		display: flex;
 		justify-content: space-between;
-		height: 30px;
+		height: 40px;
+		width: 100%;
+		padding:10px 20px 0 0;
+		z-index: 10;
+		background-color: white;
 	}
 
 	ul {
 		display: flex;
 		list-style-type: none;
-	}
-
-	li {
-		display: inline-block;
 	}
 
 	#carousel-container {
@@ -124,7 +126,7 @@
 		flex-wrap: nowrap;
 		flex-direction: row;
 		overflow-x: hidden;
-		margin-bottom: 30px;
+		margin: 30px 0;
 	}
 
 	@media (min-width: 640px) {

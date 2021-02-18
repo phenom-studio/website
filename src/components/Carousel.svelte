@@ -1,8 +1,6 @@
 <script>
   export let carousel;
   export let i;
-  let imageWidth = 420;
-  let imageHeight = 600;
   let transitionDuration = 2000;
   let transitionDelay = 3000;
 
@@ -50,7 +48,6 @@
           in:fade="{{ duration: 2000 }}"
           src = {item.path}
           alt = {item.alt}
-          style={`width: ${imageWidth}px; height: ${imageHeight}px`}
         />
         <figcaption>{item.caption}</figcaption>
       </figure>
@@ -61,19 +58,21 @@
 
   #carousel-images {
     position: relative;
-    width: 420px;
-    height: 600px;
+    width: 33vw;
+    height: 48vw;
   }
 
   figure, img {
     position: absolute;
+    width: 100%;
+    height: 48vw;
   }
 
   figure {
     margin-block-start: 0;
-      margin-block-end: 0;
-      margin-inline-start: 0;
-      margin-inline-end: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0;
+    margin-inline-end: 0;
   }
 
   figcaption {

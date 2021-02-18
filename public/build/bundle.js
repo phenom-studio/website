@@ -835,11 +835,11 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[10] = list[i];
+    	child_ctx[8] = list[i];
     	return child_ctx;
     }
 
-    // (46:4) {#each [carousel[index]] as item (item.id)}
+    // (44:4) {#each [carousel[index]] as item (item.id)}
     function create_each_block(key_1, ctx) {
     	let figure;
     	let img;
@@ -849,7 +849,7 @@ var app = (function () {
     	let img_outro;
     	let t0;
     	let figcaption;
-    	let t1_value = /*item*/ ctx[10].caption + "";
+    	let t1_value = /*item*/ ctx[8].caption + "";
     	let t1;
     	let t2;
     	let current;
@@ -866,15 +866,14 @@ var app = (function () {
     			figcaption = element("figcaption");
     			t1 = text(t1_value);
     			t2 = space();
-    			if (img.src !== (img_src_value = /*item*/ ctx[10].path)) attr_dev(img, "src", img_src_value);
-    			attr_dev(img, "alt", img_alt_value = /*item*/ ctx[10].alt);
-    			attr_dev(img, "style", `width: ${/*imageWidth*/ ctx[3]}px; height: ${/*imageHeight*/ ctx[4]}px`);
-    			attr_dev(img, "class", "svelte-bocsum");
-    			add_location(img, file, 47, 8, 919);
-    			attr_dev(figcaption, "class", "svelte-bocsum");
-    			add_location(figcaption, file, 54, 8, 1150);
-    			attr_dev(figure, "class", "svelte-bocsum");
-    			add_location(figure, file, 46, 6, 866);
+    			if (img.src !== (img_src_value = /*item*/ ctx[8].path)) attr_dev(img, "src", img_src_value);
+    			attr_dev(img, "alt", img_alt_value = /*item*/ ctx[8].alt);
+    			attr_dev(img, "class", "svelte-hvzlzq");
+    			add_location(img, file, 45, 8, 870);
+    			attr_dev(figcaption, "class", "svelte-hvzlzq");
+    			add_location(figcaption, file, 51, 8, 1032);
+    			attr_dev(figure, "class", "svelte-hvzlzq");
+    			add_location(figure, file, 44, 6, 817);
     			this.first = figure;
     		},
     		m: function mount(target, anchor) {
@@ -887,22 +886,22 @@ var app = (function () {
     			current = true;
 
     			if (!mounted) {
-    				dispose = listen_dev(figure, "click", /*click_handler*/ ctx[6], false, false, false);
+    				dispose = listen_dev(figure, "click", /*click_handler*/ ctx[4], false, false, false);
     				mounted = true;
     			}
     		},
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
 
-    			if (!current || dirty & /*carousel, index*/ 5 && img.src !== (img_src_value = /*item*/ ctx[10].path)) {
+    			if (!current || dirty & /*carousel, index*/ 5 && img.src !== (img_src_value = /*item*/ ctx[8].path)) {
     				attr_dev(img, "src", img_src_value);
     			}
 
-    			if (!current || dirty & /*carousel, index*/ 5 && img_alt_value !== (img_alt_value = /*item*/ ctx[10].alt)) {
+    			if (!current || dirty & /*carousel, index*/ 5 && img_alt_value !== (img_alt_value = /*item*/ ctx[8].alt)) {
     				attr_dev(img, "alt", img_alt_value);
     			}
 
-    			if ((!current || dirty & /*carousel, index*/ 5) && t1_value !== (t1_value = /*item*/ ctx[10].caption + "")) set_data_dev(t1, t1_value);
+    			if ((!current || dirty & /*carousel, index*/ 5) && t1_value !== (t1_value = /*item*/ ctx[8].caption + "")) set_data_dev(t1, t1_value);
     		},
     		i: function intro(local) {
     			if (current) return;
@@ -932,7 +931,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(46:4) {#each [carousel[index]] as item (item.id)}",
+    		source: "(44:4) {#each [carousel[index]] as item (item.id)}",
     		ctx
     	});
 
@@ -946,7 +945,7 @@ var app = (function () {
     	let current;
     	let each_value = [/*carousel*/ ctx[0][/*index*/ ctx[2]]];
     	validate_each_argument(each_value);
-    	const get_key = ctx => /*item*/ ctx[10].id;
+    	const get_key = ctx => /*item*/ ctx[8].id;
     	validate_each_keys(ctx, each_value, get_each_context, get_key);
 
     	for (let i = 0; i < 1; i += 1) {
@@ -964,8 +963,8 @@ var app = (function () {
     			}
 
     			attr_dev(div, "id", "carousel-images");
-    			attr_dev(div, "class", "svelte-bocsum");
-    			add_location(div, file, 43, 2, 736);
+    			attr_dev(div, "class", "svelte-hvzlzq");
+    			add_location(div, file, 41, 2, 687);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -980,7 +979,7 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*console, i, carousel, index, imageWidth, imageHeight*/ 31) {
+    			if (dirty & /*console, i, carousel, index*/ 7) {
     				each_value = [/*carousel*/ ctx[0][/*index*/ ctx[2]]];
     				validate_each_argument(each_value);
     				group_outros();
@@ -1040,8 +1039,6 @@ var app = (function () {
     	validate_slots("Carousel", slots, []);
     	let { carousel } = $$props;
     	let { i } = $$props;
-    	let imageWidth = 420;
-    	let imageHeight = 600;
     	let transitionDuration = 2000;
     	let transitionDelay = 3000;
     	let index = 0;
@@ -1075,8 +1072,6 @@ var app = (function () {
     	$$self.$capture_state = () => ({
     		carousel,
     		i,
-    		imageWidth,
-    		imageHeight,
     		transitionDuration,
     		transitionDelay,
     		fade,
@@ -1088,10 +1083,8 @@ var app = (function () {
     	$$self.$inject_state = $$props => {
     		if ("carousel" in $$props) $$invalidate(0, carousel = $$props.carousel);
     		if ("i" in $$props) $$invalidate(1, i = $$props.i);
-    		if ("imageWidth" in $$props) $$invalidate(3, imageWidth = $$props.imageWidth);
-    		if ("imageHeight" in $$props) $$invalidate(4, imageHeight = $$props.imageHeight);
     		if ("transitionDuration" in $$props) transitionDuration = $$props.transitionDuration;
-    		if ("transitionDelay" in $$props) $$invalidate(5, transitionDelay = $$props.transitionDelay);
+    		if ("transitionDelay" in $$props) $$invalidate(3, transitionDelay = $$props.transitionDelay);
     		if ("index" in $$props) $$invalidate(2, index = $$props.index);
     		if ("run" in $$props) run = $$props.run;
     	};
@@ -1101,14 +1094,14 @@ var app = (function () {
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*transitionDelay*/ 32) {
+    		if ($$self.$$.dirty & /*transitionDelay*/ 8) {
     			 {
     				run = setInterval(next, transitionDelay);
     			}
     		}
     	};
 
-    	return [carousel, i, index, imageWidth, imageHeight, transitionDelay, click_handler];
+    	return [carousel, i, index, transitionDelay, click_handler];
     }
 
     class Carousel extends SvelteComponentDev {
@@ -1929,23 +1922,20 @@ var app = (function () {
     			footer = element("footer");
     			footer.textContent = "Colophon & Copyright";
     			add_location(h1, file$3, 63, 2, 2876);
-    			attr_dev(li0, "class", "svelte-5ge3q4");
     			add_location(li0, file$3, 66, 4, 2910);
-    			attr_dev(li1, "class", "svelte-5ge3q4");
     			add_location(li1, file$3, 67, 4, 2928);
-    			attr_dev(li2, "class", "svelte-5ge3q4");
     			add_location(li2, file$3, 68, 4, 2949);
-    			attr_dev(ul, "class", "svelte-5ge3q4");
+    			attr_dev(ul, "class", "svelte-ob1ql");
     			add_location(ul, file$3, 65, 3, 2901);
     			add_location(div0, file$3, 64, 2, 2892);
-    			attr_dev(header, "class", "svelte-5ge3q4");
+    			attr_dev(header, "class", "svelte-ob1ql");
     			add_location(header, file$3, 62, 1, 2865);
     			attr_dev(div1, "id", "carousel-container");
-    			attr_dev(div1, "class", "svelte-5ge3q4");
+    			attr_dev(div1, "class", "svelte-ob1ql");
     			add_location(div1, file$3, 72, 1, 2997);
     			add_location(div2, file$3, 77, 1, 3079);
     			add_location(footer, file$3, 90, 1, 3333);
-    			attr_dev(main, "class", "svelte-5ge3q4");
+    			attr_dev(main, "class", "svelte-ob1ql");
     			add_location(main, file$3, 61, 0, 2857);
     		},
     		l: function claim(nodes) {
