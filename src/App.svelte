@@ -57,7 +57,29 @@
 		]
 	]
 
+	let y = 0;
+	let lastY = 0;
+	let theaterWrapper;
+
+	const scrollToTheater = (y) => {
+		let dy = lastY - y;
+	  	lastY = y;
+
+		if (dy < -20) {
+			console.log(dy)
+			document.body.parentNode.scrollTo({
+				top: theaterWrapper.offsetTop,
+				left: 0,
+				behavior: 'smooth'
+			})
+		}
+	}
+
+	$: scrollToTheater(y);
+
 </script>
+
+<svelte:window bind:scrollY={y} />
 
 <main>
 	<header>
@@ -75,7 +97,7 @@
 			{carouselImages}
 		/>
 	</div>
-	<div>
+	<div bind:this="{theaterWrapper}">
 		<Theater>
 			{#await fetchJSONData(projectDataUrl)}
 				<p>loading</p>
