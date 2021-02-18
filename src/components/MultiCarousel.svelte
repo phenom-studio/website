@@ -13,7 +13,5 @@
 {/each}
 
 <style>
-    Carousel {
-        margin-bottom: 30px;
-    }
+
 </style>

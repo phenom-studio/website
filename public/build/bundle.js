@@ -1380,7 +1380,7 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			if (default_slot) default_slot.c();
-    			attr_dev(div, "class", "theater svelte-17s3a4m");
+    			attr_dev(div, "class", "theater svelte-1omibm8");
     			add_location(div, file$1, 0, 0, 0);
     		},
     		l: function claim(nodes) {
@@ -1482,11 +1482,11 @@ var app = (function () {
     			h4.textContent = `${/*tag*/ ctx[1]}`;
     			add_location(h3, file$2, 9, 12, 169);
     			add_location(h4, file$2, 10, 12, 198);
-    			attr_dev(div0, "class", "content svelte-tgkyqa");
+    			attr_dev(div0, "class", "content svelte-y8gvoz");
     			add_location(div0, file$2, 8, 8, 135);
-    			attr_dev(div1, "class", "background svelte-tgkyqa");
+    			attr_dev(div1, "class", "background svelte-y8gvoz");
     			add_location(div1, file$2, 7, 4, 102);
-    			attr_dev(div2, "class", "card");
+    			attr_dev(div2, "class", "card svelte-y8gvoz");
     			add_location(div2, file$2, 6, 0, 79);
     		},
     		l: function claim(nodes) {
@@ -1589,7 +1589,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (85:3) {:catch error}
+    // (86:3) {:catch error}
     function create_catch_block(ctx) {
     	let t_value = console.log(/*error*/ ctx[6].message) + "";
     	let t;
@@ -1613,14 +1613,14 @@ var app = (function () {
     		block,
     		id: create_catch_block.name,
     		type: "catch",
-    		source: "(85:3) {:catch error}",
+    		source: "(86:3) {:catch error}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (81:3) {:then projects}
+    // (82:3) {:then projects}
     function create_then_block(ctx) {
     	let each_1_anchor;
     	let current;
@@ -1709,14 +1709,14 @@ var app = (function () {
     		block,
     		id: create_then_block.name,
     		type: "then",
-    		source: "(81:3) {:then projects}",
+    		source: "(82:3) {:then projects}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (82:4) {#each projects as project}
+    // (83:4) {#each projects as project}
     function create_each_block$2(ctx) {
     	let card;
     	let current;
@@ -1753,14 +1753,14 @@ var app = (function () {
     		block,
     		id: create_each_block$2.name,
     		type: "each",
-    		source: "(82:4) {#each projects as project}",
+    		source: "(83:4) {#each projects as project}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (79:41)      <p>loading</p>    {:then projects}
+    // (80:41)      <p>loading</p>    {:then projects}
     function create_pending_block(ctx) {
     	let p;
 
@@ -1768,7 +1768,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "loading";
-    			add_location(p, file$3, 79, 4, 3121);
+    			add_location(p, file$3, 80, 4, 3143);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -1785,14 +1785,14 @@ var app = (function () {
     		block,
     		id: create_pending_block.name,
     		type: "pending",
-    		source: "(79:41)      <p>loading</p>    {:then projects}",
+    		source: "(80:41)      <p>loading</p>    {:then projects}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (78:2) <Theater>
+    // (79:2) <Theater>
     function create_default_slot(ctx) {
     	let await_block_anchor;
     	let current;
@@ -1858,7 +1858,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(78:2) <Theater>",
+    		source: "(79:2) <Theater>",
     		ctx
     	});
 
@@ -1876,12 +1876,14 @@ var app = (function () {
     	let t3;
     	let li1;
     	let t5;
+    	let li2;
+    	let t7;
     	let div1;
     	let multicarousel;
-    	let t6;
+    	let t8;
     	let div2;
     	let theater;
-    	let t7;
+    	let t9;
     	let footer;
     	let current;
 
@@ -1915,28 +1917,35 @@ var app = (function () {
     			li1 = element("li");
     			li1.textContent = "Contact";
     			t5 = space();
+    			li2 = element("li");
+    			li2.textContent = "Colophon";
+    			t7 = space();
     			div1 = element("div");
     			create_component(multicarousel.$$.fragment);
-    			t6 = space();
+    			t8 = space();
     			div2 = element("div");
     			create_component(theater.$$.fragment);
-    			t7 = space();
+    			t9 = space();
     			footer = element("footer");
     			footer.textContent = "Colophon & Copyright";
-    			attr_dev(h1, "class", "svelte-1mjrpli");
     			add_location(h1, file$3, 63, 2, 2876);
+    			attr_dev(li0, "class", "svelte-5ge3q4");
     			add_location(li0, file$3, 66, 4, 2910);
+    			attr_dev(li1, "class", "svelte-5ge3q4");
     			add_location(li1, file$3, 67, 4, 2928);
+    			attr_dev(li2, "class", "svelte-5ge3q4");
+    			add_location(li2, file$3, 68, 4, 2949);
+    			attr_dev(ul, "class", "svelte-5ge3q4");
     			add_location(ul, file$3, 65, 3, 2901);
     			add_location(div0, file$3, 64, 2, 2892);
-    			attr_dev(header, "class", "svelte-1mjrpli");
+    			attr_dev(header, "class", "svelte-5ge3q4");
     			add_location(header, file$3, 62, 1, 2865);
     			attr_dev(div1, "id", "carousel-container");
-    			attr_dev(div1, "class", "svelte-1mjrpli");
-    			add_location(div1, file$3, 71, 1, 2975);
-    			add_location(div2, file$3, 76, 1, 3057);
-    			add_location(footer, file$3, 89, 1, 3311);
-    			attr_dev(main, "class", "svelte-1mjrpli");
+    			attr_dev(div1, "class", "svelte-5ge3q4");
+    			add_location(div1, file$3, 72, 1, 2997);
+    			add_location(div2, file$3, 77, 1, 3079);
+    			add_location(footer, file$3, 90, 1, 3333);
+    			attr_dev(main, "class", "svelte-5ge3q4");
     			add_location(main, file$3, 61, 0, 2857);
     		},
     		l: function claim(nodes) {
@@ -1952,13 +1961,15 @@ var app = (function () {
     			append_dev(ul, li0);
     			append_dev(ul, t3);
     			append_dev(ul, li1);
-    			append_dev(main, t5);
+    			append_dev(ul, t5);
+    			append_dev(ul, li2);
+    			append_dev(main, t7);
     			append_dev(main, div1);
     			mount_component(multicarousel, div1, null);
-    			append_dev(main, t6);
+    			append_dev(main, t8);
     			append_dev(main, div2);
     			mount_component(theater, div2, null);
-    			append_dev(main, t7);
+    			append_dev(main, t9);
     			append_dev(main, footer);
     			current = true;
     		},

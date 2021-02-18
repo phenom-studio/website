@@ -66,6 +66,7 @@
 			<ul>
 				<li>Work</li>
 				<li>Contact</li>
+				<li>Colophon</li>
 			</ul>
 		</div>
 	</header>
@@ -97,19 +98,24 @@
 	main {
 		text-align: left;
 		color: black;
-		padding: 1em;
+		padding: 10px;
 		max-width: 1050px;
 		margin: 0 auto;
-		border: 1px solid black;
 	}
 
 	header {
 		display: flex;
 		justify-content: space-between;
+		height: 30px;
 	}
 
-	h1 {
-		font-size: 2em;
+	ul {
+		display: flex;
+		list-style-type: none;
+	}
+
+	li {
+		display: inline-block;
 	}
 
 	#carousel-container {
@@ -118,6 +124,7 @@
 		flex-wrap: nowrap;
 		flex-direction: row;
 		overflow-x: hidden;
+		margin-bottom: 30px;
 	}
 
 	@media (min-width: 640px) {

@@ -18,7 +18,14 @@
         position: relative;
         width: 100%;
         padding-bottom: 100%;
-        background-color: rebeccapurple;
+    }
+
+    .card {
+        width: 66vw;
+        height: 33vw;
+        margin: 0 auto;
+        margin-top: 33vw;
+        background-color: white;
     }
 
     .content {
