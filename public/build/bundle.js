@@ -1578,13 +1578,13 @@ var app = (function () {
 
     function get_each_context$2(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[9] = list[i];
+    	child_ctx[8] = list[i];
     	return child_ctx;
     }
 
-    // (108:3) {:catch error}
+    // (98:3) {:catch error}
     function create_catch_block(ctx) {
-    	let t_value = console.log(/*error*/ ctx[12].message) + "";
+    	let t_value = console.log(/*error*/ ctx[11].message) + "";
     	let t;
 
     	const block = {
@@ -1606,18 +1606,18 @@ var app = (function () {
     		block,
     		id: create_catch_block.name,
     		type: "catch",
-    		source: "(108:3) {:catch error}",
+    		source: "(98:3) {:catch error}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (104:3) {:then projects}
+    // (94:3) {:then projects}
     function create_then_block(ctx) {
     	let each_1_anchor;
     	let current;
-    	let each_value = /*projects*/ ctx[8];
+    	let each_value = /*projects*/ ctx[7];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -1647,7 +1647,7 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			if (dirty & /*fetchJSONData, projectDataUrl*/ 0) {
-    				each_value = /*projects*/ ctx[8];
+    				each_value = /*projects*/ ctx[7];
     				validate_each_argument(each_value);
     				let i;
 
@@ -1702,20 +1702,20 @@ var app = (function () {
     		block,
     		id: create_then_block.name,
     		type: "then",
-    		source: "(104:3) {:then projects}",
+    		source: "(94:3) {:then projects}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (105:4) {#each projects as project}
+    // (95:4) {#each projects as project}
     function create_each_block$2(ctx) {
     	let card;
     	let current;
 
     	card = new Card({
-    			props: { project: /*project*/ ctx[9] },
+    			props: { project: /*project*/ ctx[8] },
     			$$inline: true
     		});
 
@@ -1746,14 +1746,14 @@ var app = (function () {
     		block,
     		id: create_each_block$2.name,
     		type: "each",
-    		source: "(105:4) {#each projects as project}",
+    		source: "(95:4) {#each projects as project}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (102:41)      <p>loading</p>    {:then projects}
+    // (92:41)      <p>loading</p>    {:then projects}
     function create_pending_block(ctx) {
     	let p;
 
@@ -1761,7 +1761,7 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			p.textContent = "loading";
-    			add_location(p, file$3, 102, 4, 3516);
+    			add_location(p, file$3, 92, 4, 3414);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -1778,14 +1778,14 @@ var app = (function () {
     		block,
     		id: create_pending_block.name,
     		type: "pending",
-    		source: "(102:41)      <p>loading</p>    {:then projects}",
+    		source: "(92:41)      <p>loading</p>    {:then projects}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (101:2) <Theater>
+    // (91:2) <Theater>
     function create_default_slot(ctx) {
     	let await_block_anchor;
     	let current;
@@ -1798,8 +1798,8 @@ var app = (function () {
     		pending: create_pending_block,
     		then: create_then_block,
     		catch: create_catch_block,
-    		value: 8,
-    		error: 12,
+    		value: 7,
+    		error: 11,
     		blocks: [,,,]
     	};
 
@@ -1822,7 +1822,7 @@ var app = (function () {
 
     			{
     				const child_ctx = ctx.slice();
-    				child_ctx[8] = child_ctx[12] = info.resolved;
+    				child_ctx[7] = child_ctx[11] = info.resolved;
     				info.block.p(child_ctx, dirty);
     			}
     		},
@@ -1851,7 +1851,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(101:2) <Theater>",
+    		source: "(91:2) <Theater>",
     		ctx
     	});
 
@@ -1859,13 +1859,6 @@ var app = (function () {
     }
 
     function create_fragment$4(ctx) {
-    	let scrolling = false;
-
-    	let clear_scrolling = () => {
-    		scrolling = false;
-    	};
-
-    	let scrolling_timeout;
     	let main;
     	let header;
     	let h1;
@@ -1888,11 +1881,10 @@ var app = (function () {
     	let current;
     	let mounted;
     	let dispose;
-    	add_render_callback(/*onwindowscroll*/ ctx[3]);
 
     	multicarousel = new MultiCarousel({
     			props: {
-    				carouselImages: /*carouselImages*/ ctx[2]
+    				carouselImages: /*carouselImages*/ ctx[1]
     			},
     			$$inline: true
     		});
@@ -1931,22 +1923,22 @@ var app = (function () {
     			t9 = space();
     			footer = element("footer");
     			footer.textContent = "Colophon & Copyright";
-    			add_location(h1, file$3, 85, 2, 3220);
-    			add_location(li0, file$3, 88, 4, 3254);
-    			add_location(li1, file$3, 89, 4, 3272);
-    			add_location(li2, file$3, 90, 4, 3293);
+    			add_location(h1, file$3, 75, 2, 3062);
+    			add_location(li0, file$3, 78, 4, 3096);
+    			add_location(li1, file$3, 79, 4, 3114);
+    			add_location(li2, file$3, 80, 4, 3135);
     			attr_dev(ul, "class", "svelte-ob1ql");
-    			add_location(ul, file$3, 87, 3, 3245);
-    			add_location(div0, file$3, 86, 2, 3236);
+    			add_location(ul, file$3, 77, 3, 3087);
+    			add_location(div0, file$3, 76, 2, 3078);
     			attr_dev(header, "class", "svelte-ob1ql");
-    			add_location(header, file$3, 84, 1, 3209);
+    			add_location(header, file$3, 74, 1, 3051);
     			attr_dev(div1, "id", "carousel-container");
     			attr_dev(div1, "class", "svelte-ob1ql");
-    			add_location(div1, file$3, 94, 1, 3341);
-    			add_location(div2, file$3, 99, 1, 3423);
-    			add_location(footer, file$3, 112, 1, 3706);
+    			add_location(div1, file$3, 84, 1, 3183);
+    			add_location(div2, file$3, 89, 1, 3321);
+    			add_location(footer, file$3, 102, 1, 3604);
     			attr_dev(main, "class", "svelte-ob1ql");
-    			add_location(main, file$3, 83, 0, 3201);
+    			add_location(main, file$3, 73, 0, 3043);
     		},
     		l: function claim(nodes) {
     			throw new Error_1("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1975,27 +1967,14 @@ var app = (function () {
     			current = true;
 
     			if (!mounted) {
-    				dispose = listen_dev(window, "scroll", () => {
-    					scrolling = true;
-    					clearTimeout(scrolling_timeout);
-    					scrolling_timeout = setTimeout(clear_scrolling, 100);
-    					/*onwindowscroll*/ ctx[3]();
-    				});
-
+    				dispose = listen_dev(div1, "mousewheel", /*mousewheel_handler*/ ctx[3], false, false, false);
     				mounted = true;
     			}
     		},
     		p: function update(ctx, [dirty]) {
-    			if (dirty & /*y*/ 1 && !scrolling) {
-    				scrolling = true;
-    				clearTimeout(scrolling_timeout);
-    				scrollTo(window.pageXOffset, /*y*/ ctx[0]);
-    				scrolling_timeout = setTimeout(clear_scrolling, 100);
-    			}
-
     			const theater_changes = {};
 
-    			if (dirty & /*$$scope*/ 8192) {
+    			if (dirty & /*$$scope*/ 4096) {
     				theater_changes.$$scope = { dirty, ctx };
     			}
 
@@ -2039,7 +2018,6 @@ var app = (function () {
     	let data = [];
     	const res = await fetch(url);
     	const jsonObj = await res.json();
-    	console.log(jsonObj);
 
     	for (var item in jsonObj) {
     		data.push(jsonObj[item]);
@@ -2187,16 +2165,10 @@ var app = (function () {
     	];
 
     	let y = 0;
-    	let lastY = 0;
     	let theaterWrapper;
 
     	const scrollToTheater = y => {
-    		let dy = lastY - y;
-    		lastY = y;
-
-    		if (dy < -20) {
-    			console.log(dy);
-
+    		if (y < -10) {
     			document.body.parentNode.scrollTo({
     				top: theaterWrapper.offsetTop,
     				left: 0,
@@ -2211,14 +2183,14 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$1.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
-    	function onwindowscroll() {
-    		$$invalidate(0, y = window.pageYOffset);
-    	}
+    	const mousewheel_handler = e => {
+    		scrollToTheater(e.wheelDeltaY);
+    	};
 
     	function div2_binding($$value) {
     		binding_callbacks[$$value ? "unshift" : "push"](() => {
     			theaterWrapper = $$value;
-    			$$invalidate(1, theaterWrapper);
+    			$$invalidate(0, theaterWrapper);
     		});
     	}
 
@@ -2231,29 +2203,27 @@ var app = (function () {
     		id,
     		carouselImages,
     		y,
-    		lastY,
     		theaterWrapper,
     		scrollToTheater
     	});
 
     	$$self.$inject_state = $$props => {
     		if ("id" in $$props) id = $$props.id;
-    		if ("y" in $$props) $$invalidate(0, y = $$props.y);
-    		if ("lastY" in $$props) lastY = $$props.lastY;
-    		if ("theaterWrapper" in $$props) $$invalidate(1, theaterWrapper = $$props.theaterWrapper);
+    		if ("y" in $$props) y = $$props.y;
+    		if ("theaterWrapper" in $$props) $$invalidate(0, theaterWrapper = $$props.theaterWrapper);
     	};
 
     	if ($$props && "$$inject" in $$props) {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*y*/ 1) {
-    			 scrollToTheater(y);
-    		}
-    	};
-
-    	return [y, theaterWrapper, carouselImages, onwindowscroll, div2_binding];
+    	return [
+    		theaterWrapper,
+    		carouselImages,
+    		scrollToTheater,
+    		mousewheel_handler,
+    		div2_binding
+    	];
     }
 
     class App extends SvelteComponentDev {

@@ -12,7 +12,6 @@
 		let data = [];
 		const res = await fetch(url);
 		const jsonObj = await res.json();
-		console.log(jsonObj)
 		for(var item in jsonObj) {
 			data.push(jsonObj[item]);
 		}
@@ -58,15 +57,10 @@
 	]
 
 	let y = 0;
-	let lastY = 0;
 	let theaterWrapper;
 
 	const scrollToTheater = (y) => {
-		let dy = lastY - y;
-	  	lastY = y;
-
-		if (dy < -20) {
-			console.log(dy)
+		if (y < -10) {
 			document.body.parentNode.scrollTo({
 				top: theaterWrapper.offsetTop,
 				left: 0,
@@ -75,11 +69,7 @@
 		}
 	}
 
-	$: scrollToTheater(y);
-
 </script>
-
-<svelte:window bind:scrollY={y} />
 
 <main>
 	<header>
@@ -92,7 +82,7 @@
 			</ul>
 		</div>
 	</header>
-	<div id="carousel-container">
+	<div id="carousel-container" on:mousewheel={(e) => {scrollToTheater(e.wheelDeltaY)}}>
 		<MultiCarousel 
 			{carouselImages}
 		/>
