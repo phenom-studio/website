@@ -94,20 +94,20 @@
 <main>
 	<header>
 		<h1>Logo</h1>
-		<div>
+		<nav>
 			<ul>
-				<li>Work</li>
-				<li>Contact</li>
-				<li>Colophon</li>
+				<a href="#theater-wrapper"><li>Work</li></a>
+				<a href="#contact"><li>Contact</li></a>
+				<a href="#footer"><li>Colophon</li></a>
 			</ul>
-		</div>
+		</nav>
 	</header>
 	<section id="carousel-container" bind:this="{carouselContainer}" on:mousewheel={(e) => {scrollToTheater(e.wheelDeltaY)}}>
 		<MultiCarousel 
 			{carouselImages}
 		/>
 	</section>
-	<section bind:this="{theaterWrapper}">
+	<section id="theater-wrapper" bind:this="{theaterWrapper}">
 		<Theater>
 			{#await fetchJSONData(projectDataUrl)}
 				<p>loading</p>
@@ -120,12 +120,12 @@
 			{/await}
 		</Theater>
 	</section>
-	<section bind:this="{contact}">
+	<section id="contact" bind:this="{contact}">
 		<Contact>
-			
+
 		</Contact>
 	</section>
-	<footer>
+	<footer id="footer">
 		Colophon & Copyright
 	</footer>
 </main>
@@ -156,6 +156,15 @@
 		display: flex;
 		list-style-type: none;
 	}
+
+	li {
+		display: inline-block;
+	}
+
+	li, a {
+		transition: all 0.2s ease 0s;
+	}
+
 
 	#carousel-container {
 		width: 100%;
