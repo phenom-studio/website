@@ -66,6 +66,24 @@
 				left: 0,
 				behavior: 'smooth'
 			})
+
+			const rollCarIn = () => {
+
+				let clientHeight = window.innerHeight;
+				let cardHeight = document.querySelector(".card").clientHeight;
+				let scrollDistance = (clientHeight - cardHeight)/4; // todo: divided by 4 bc including card height + margin
+				console.log(clientHeight, cardHeight, scrollDistance);
+
+				let theater = document.querySelector(".theater");
+
+				theater.scrollTo({
+					top: scrollDistance,
+					left: 0,
+					behavior: 'smooth'
+				})
+			}
+
+			setTimeout(rollCarIn, 1000);
 		}
 	}
 
