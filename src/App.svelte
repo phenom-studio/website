@@ -1,9 +1,9 @@
 <script>
 	import MultiCarousel from './components/MultiCarousel.svelte';
 	// import Grid from './Grid.svelte';
-	import Theater from './Theater.svelte';
-	import Card from './Card.svelte';
-
+	import Theater from './components/Theater.svelte';
+	import Card from './components/Card.svelte';
+	import Contact from './components/Contact.svelte';
 	// data //
 
 	const projectDataUrl = "./projects.json";
@@ -57,7 +57,9 @@
 	]
 
 	let y = 0;
+	let carouselContainer;
 	let theaterWrapper;
+	let contact;
 
 	const scrollToTheater = (y) => {
 		if (y < -10) {
@@ -100,12 +102,12 @@
 			</ul>
 		</div>
 	</header>
-	<div id="carousel-container" on:mousewheel={(e) => {scrollToTheater(e.wheelDeltaY)}}>
+	<section id="carousel-container" bind:this="{carouselContainer}" on:mousewheel={(e) => {scrollToTheater(e.wheelDeltaY)}}>
 		<MultiCarousel 
 			{carouselImages}
 		/>
-	</div>
-	<div bind:this="{theaterWrapper}">
+	</section>
+	<section bind:this="{theaterWrapper}">
 		<Theater>
 			{#await fetchJSONData(projectDataUrl)}
 				<p>loading</p>
@@ -117,7 +119,12 @@
 				{(console.log(error.message))}
 			{/await}
 		</Theater>
-	</div>
+	</section>
+	<section bind:this="{contact}">
+		<Contact>
+			
+		</Contact>
+	</section>
 	<footer>
 		Colophon & Copyright
 	</footer>
