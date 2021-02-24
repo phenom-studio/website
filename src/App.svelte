@@ -69,7 +69,7 @@
 				behavior: 'smooth'
 			})
 
-			const rollCarIn = () => {
+			const rollCardIn = () => {
 
 				let clientHeight = window.innerHeight;
 				let cardHeight = document.querySelector(".card").clientHeight;
@@ -85,7 +85,7 @@
 				})
 			}
 
-			setTimeout(rollCarIn, 1000);
+			setTimeout(rollCardIn, 1000);
 		}
 	}
 
